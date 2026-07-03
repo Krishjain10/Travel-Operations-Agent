@@ -1,0 +1,46 @@
+{
+  "tickets": [
+    {
+      "id": "TKT-001",
+      "subject": "Flight cancelled — need refund",
+      "body": "Hi, I just received a notification that my flight SW-1847 from Los Angeles to New York on July 15th has been cancelled by the airline. This is really frustrating as I have important meetings scheduled. I need a full refund for this booking. My booking reference is BKG-1001. I also have a hotel room booked at the Grand Central Hotel in NYC starting the same day — what happens with that reservation now that the flight is cancelled? Please help me sort this out as soon as possible. Thank you, Sarah Mitchell",
+      "submitted_at": "2026-07-03T09:14:00",
+      "channel": "email"
+    },
+    {
+      "id": "TKT-002",
+      "subject": "Need to cancel my upcoming trip",
+      "body": "Hello, I need to cancel my upcoming flight SW-2291 from San Francisco to Chicago on July 22nd. Something urgent came up at work and I simply can't make the trip anymore. My booking reference is BKG-1002 and I'm in premium economy. I paid $450 total for the booking including the hotel. I'd really like to get my money back if possible, but I understand there might be cancellation fees since this is my decision and not the airline's fault. Whatever options are available, I'd appreciate hearing about them. I'm a Gold loyalty member if that helps at all. Thanks, James Rodriguez",
+      "submitted_at": "2026-07-03T10:42:00",
+      "channel": "web_form"
+    },
+    {
+      "id": "TKT-003",
+      "subject": "FLIGHT RESCHEDULED — hotel dates don't match anymore!",
+      "body": "I just received an email saying my Pacific Air flight PA-0455 from Seattle to Los Angeles has been rescheduled from July 10th to July 11th! That's a full day later! This completely messes up my vacation plans — I have a hotel booked at Sunset Beach Resort in LA starting July 10th. If I don't arrive until July 11th, I'm losing an entire night that I've already paid for at $220/night. I need either: (1) to be put on a flight that gets me there on July 10th as originally planned, or (2) have this entire situation sorted out including the hotel issue. Booking reference is BKG-1003. This is really unacceptable — I booked everything together specifically so the dates would line up. Emily Chen",
+      "submitted_at": "2026-07-03T07:28:00",
+      "channel": "email"
+    },
+    {
+      "id": "TKT-004",
+      "subject": "URGENT — Stranded at JFK, missed connection to London",
+      "body": "URGENT — I need immediate help. My connecting flight AA-4501 from Dallas to JFK was delayed by THREE HOURS, and as a result I have missed my onward Atlantic Airways flight AA-7821 from JFK to London Heathrow. I am currently stranded at JFK airport with absolutely no way to get to London for critical business meetings scheduled for tomorrow morning. My booking reference is BKG-1004, business class, and I paid $1,200 for this itinerary. I need IMMEDIATE rebooking on the next available flight to London, or failing that, a full refund so I can book directly with another carrier. This level of service from a business class ticket is completely unacceptable. I am a Platinum loyalty member and I am seriously reconsidering my relationship with this airline. If this is not resolved within the hour I will be filing a formal complaint with the aviation authority. Michael Thompson",
+      "submitted_at": "2026-07-03T01:15:00",
+      "channel": "phone_transcript"
+    },
+    {
+      "id": "TKT-005",
+      "subject": "Compensation for 4-hour flight delay",
+      "body": "Hi there, my flight SW-3342 from Denver to Miami on July 18th was delayed by 4 hours. We sat on the tarmac for ages with barely any updates from the crew about what was happening. I eventually arrived in Miami much later than planned and missed a dinner reservation I had been looking forward to. I'm not necessarily looking for a full refund — I did get to my destination eventually — but I feel like some form of compensation is warranted for the significant inconvenience and poor communication. My booking reference is BKG-1005, economy class. What can you do for me? Thanks, Lisa Park",
+      "submitted_at": "2026-07-03T11:30:00",
+      "channel": "web_form"
+    },
+    {
+      "id": "TKT-006",
+      "subject": "Need to change travel dates — what are my options?",
+      "body": "Hi, I have booking BKG-1006 for a Pacific Air flight PA-1122 from Boston to San Francisco on July 25th. Something has come up and I need to push my trip back by about a week. I'd like to rebook for a flight around July 30th to August 1st if possible. I'm in premium economy and I'm a Gold member. Can you help me find available flights on those dates and let me know what the change fee would be? I'd like to get this sorted quickly so I can update my hotel reservation on my end as well. Thanks, David Kim",
+      "submitted_at": "2026-07-03T12:05:00",
+      "channel": "email"
+    }
+  ]
+}

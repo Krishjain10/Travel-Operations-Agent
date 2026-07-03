@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables and API keys
+agent/config.json
+.env
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Output and logs
+output/
+case_logs/
+*.log
+
+# IDEs
+.vscode/
+.idea/

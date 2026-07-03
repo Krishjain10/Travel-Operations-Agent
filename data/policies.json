@@ -1,0 +1,235 @@
+{
+  "policies": [
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "economy",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §3.1: Full refund guaranteed for all airline-initiated cancellations regardless of fare class. Passengers may alternatively opt for a travel voucher of equal value valid for 12 months."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "economy",
+      "cause": "customer_cancellation",
+      "refund_percent": 40,
+      "voucher_percent": 75,
+      "change_fee": 100,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §4.1: Economy class customer-initiated cancellations are eligible for a 40% cash refund of the booking total, or a 75% travel voucher. A $100 change fee applies for rebooking to alternate dates."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "economy",
+      "cause": "delay",
+      "refund_percent": 0,
+      "voucher_percent": 25,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §5.1: Economy passengers affected by delays of 3 or more hours are eligible for a 25% travel voucher as goodwill compensation. No cash refund is available for delays; complimentary rebooking is offered at no charge."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "economy",
+      "cause": "schedule_change",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §6.1: Full refund or complimentary rebooking for airline-initiated schedule changes affecting departure time by 2 or more hours."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "premium_economy",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §3.2: Full refund guaranteed for all airline-initiated cancellations on Premium Economy. Travel voucher alternative available at 100% value, valid 12 months."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "premium_economy",
+      "cause": "customer_cancellation",
+      "refund_percent": 60,
+      "voucher_percent": 100,
+      "change_fee": 75,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §4.2: Premium Economy customer-initiated cancellations are eligible for a 60% cash refund or a 100% travel voucher of the full booking value. A $75 change fee applies for rebooking to alternate dates."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "premium_economy",
+      "cause": "delay",
+      "refund_percent": 0,
+      "voucher_percent": 35,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "SkyWest Policy §5.2: Premium Economy passengers affected by delays of 3 or more hours are eligible for a 35% travel voucher. Complimentary rebooking on next available flight."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "business",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "SkyWest Policy §3.3: Business class — full refund guaranteed for airline-initiated cancellations. Priority rebooking on next available flight."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "business",
+      "cause": "customer_cancellation",
+      "refund_percent": 80,
+      "voucher_percent": 100,
+      "change_fee": 50,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "SkyWest Policy §4.3: Business class customer-initiated cancellations eligible for 80% cash refund or 100% travel voucher. $50 change fee for rebooking."
+    },
+    {
+      "airline": "SkyWest Airlines",
+      "fare_class": "business",
+      "cause": "delay",
+      "refund_percent": 0,
+      "voucher_percent": 50,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "SkyWest Policy §5.3: Business class passengers affected by delays of 2 or more hours eligible for 50% travel voucher and priority rebooking."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "economy",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §3.1: Full refund for airline-initiated cancellations across all fare classes. Alternate voucher of equal value available."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "economy",
+      "cause": "customer_cancellation",
+      "refund_percent": 30,
+      "voucher_percent": 60,
+      "change_fee": 125,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §4.1: Economy customer cancellations receive 30% cash refund or 60% travel voucher. $125 change fee for rebooking."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "economy",
+      "cause": "schedule_change",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §6.1: Full refund or complimentary rebooking for airline-initiated schedule changes affecting departure by 2 or more hours. Hotel accommodation assistance provided for overnight schedule shifts."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "premium_economy",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §3.2: Premium Economy — full refund for airline-initiated cancellations. Priority rebooking available."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "premium_economy",
+      "cause": "customer_cancellation",
+      "refund_percent": 50,
+      "voucher_percent": 90,
+      "change_fee": 100,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §4.3: Premium Economy customer-initiated cancellations eligible for 50% cash refund or 90% travel voucher. $100 change fee applies for rebooking to alternate dates."
+    },
+    {
+      "airline": "Pacific Air",
+      "fare_class": "premium_economy",
+      "cause": "schedule_change",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Pacific Air Policy §6.2: Premium Economy — full refund or priority rebooking for airline-initiated schedule changes."
+    },
+    {
+      "airline": "Atlantic Airways",
+      "fare_class": "business",
+      "cause": "airline_cancellation",
+      "refund_percent": 100,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "Atlantic Airways Policy §3.1: Full refund for airline-initiated cancellations on Business class. Priority rebooking with complimentary lounge access during wait."
+    },
+    {
+      "airline": "Atlantic Airways",
+      "fare_class": "business",
+      "cause": "customer_cancellation",
+      "refund_percent": 85,
+      "voucher_percent": 100,
+      "change_fee": 50,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "Atlantic Airways Policy §4.2: Business class customer cancellations receive 85% cash refund or 100% travel voucher. $50 change fee for rebooking."
+    },
+    {
+      "airline": "Atlantic Airways",
+      "fare_class": "business",
+      "cause": "delay",
+      "refund_percent": 0,
+      "voucher_percent": 50,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 800,
+      "policy_clause": "Atlantic Airways Policy §5.2: Business class passengers experiencing delays of 2+ hours eligible for 50% travel voucher and priority rebooking on next available service."
+    },
+    {
+      "airline": "Atlantic Airways",
+      "fare_class": "business",
+      "cause": "missed_connection",
+      "refund_percent": 80,
+      "voucher_percent": 100,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Atlantic Airways Policy §7.2: Business class passengers who miss connections due to airline-caused delays are eligible for 80% cash refund or full-value travel voucher. Complimentary rebooking on the next available flight at no additional charge. Meals and lounge access provided during wait."
+    },
+    {
+      "airline": "Atlantic Airways",
+      "fare_class": "economy",
+      "cause": "missed_connection",
+      "refund_percent": 50,
+      "voucher_percent": 75,
+      "change_fee": 0,
+      "rebooking_allowed": true,
+      "auto_approve_max": 500,
+      "policy_clause": "Atlantic Airways Policy §7.1: Economy passengers who miss connections due to airline-caused delays eligible for 50% cash refund or 75% travel voucher. Rebooking on next available flight at no charge."
+    }
+  ]
+}

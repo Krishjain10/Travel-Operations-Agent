@@ -1,0 +1,185 @@
+{
+  "bookings": [
+    {
+      "booking_id": "BKG-1001",
+      "ticket_id": "TKT-001",
+      "passenger": {
+        "name": "Sarah Mitchell",
+        "email": "sarah.mitchell@email.com",
+        "loyalty_tier": "silver"
+      },
+      "flight": {
+        "airline": "SkyWest Airlines",
+        "flight_number": "SW-1847",
+        "origin": "LAX",
+        "destination": "JFK",
+        "departure": "2026-07-15T08:30:00",
+        "arrival": "2026-07-15T17:15:00",
+        "status": "CANCELLED"
+      },
+      "hotel": {
+        "name": "Grand Central Hotel",
+        "city": "New York",
+        "check_in": "2026-07-15",
+        "check_out": "2026-07-18",
+        "rate_per_night": 189.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "economy",
+      "total_paid": 320.00
+    },
+    {
+      "booking_id": "BKG-1002",
+      "ticket_id": "TKT-002",
+      "passenger": {
+        "name": "James Rodriguez",
+        "email": "james.rodriguez@email.com",
+        "loyalty_tier": "gold"
+      },
+      "flight": {
+        "airline": "SkyWest Airlines",
+        "flight_number": "SW-2291",
+        "origin": "SFO",
+        "destination": "ORD",
+        "departure": "2026-07-22T10:15:00",
+        "arrival": "2026-07-22T16:45:00",
+        "status": "CONFIRMED"
+      },
+      "hotel": {
+        "name": "Chicago Lakeside Inn",
+        "city": "Chicago",
+        "check_in": "2026-07-22",
+        "check_out": "2026-07-25",
+        "rate_per_night": 165.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "premium_economy",
+      "total_paid": 450.00
+    },
+    {
+      "booking_id": "BKG-1003",
+      "ticket_id": "TKT-003",
+      "passenger": {
+        "name": "Emily Chen",
+        "email": "emily.chen@email.com",
+        "loyalty_tier": "silver"
+      },
+      "flight": {
+        "airline": "Pacific Air",
+        "flight_number": "PA-0455",
+        "origin": "SEA",
+        "destination": "LAX",
+        "departure": "2026-07-11T14:30:00",
+        "arrival": "2026-07-11T17:45:00",
+        "original_departure": "2026-07-10T08:30:00",
+        "original_arrival": "2026-07-10T11:45:00",
+        "status": "RESCHEDULED"
+      },
+      "hotel": {
+        "name": "Sunset Beach Resort",
+        "city": "Los Angeles",
+        "check_in": "2026-07-10",
+        "check_out": "2026-07-13",
+        "rate_per_night": 220.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "economy",
+      "total_paid": 380.00
+    },
+    {
+      "booking_id": "BKG-1004",
+      "ticket_id": "TKT-004",
+      "passenger": {
+        "name": "Michael Thompson",
+        "email": "m.thompson@email.com",
+        "loyalty_tier": "platinum"
+      },
+      "flight": {
+        "airline": "Atlantic Airways",
+        "flight_number": "AA-7821",
+        "origin": "JFK",
+        "destination": "LHR",
+        "departure": "2026-07-08T21:00:00",
+        "arrival": "2026-07-09T09:00:00",
+        "status": "MISSED_CONNECTION"
+      },
+      "connecting_from": {
+        "airline": "Atlantic Airways",
+        "flight_number": "AA-4501",
+        "origin": "DFW",
+        "destination": "JFK",
+        "scheduled_departure": "2026-07-08T14:00:00",
+        "actual_departure": "2026-07-08T17:00:00",
+        "status": "DELAYED"
+      },
+      "hotel": {
+        "name": "London Westminster Hotel",
+        "city": "London",
+        "check_in": "2026-07-09",
+        "check_out": "2026-07-12",
+        "rate_per_night": 310.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "business",
+      "total_paid": 1200.00
+    },
+    {
+      "booking_id": "BKG-1005",
+      "ticket_id": "TKT-005",
+      "passenger": {
+        "name": "Lisa Park",
+        "email": "lisa.park@email.com",
+        "loyalty_tier": "silver"
+      },
+      "flight": {
+        "airline": "SkyWest Airlines",
+        "flight_number": "SW-3342",
+        "origin": "DEN",
+        "destination": "MIA",
+        "departure": "2026-07-18T15:00:00",
+        "arrival": "2026-07-18T21:30:00",
+        "scheduled_departure": "2026-07-18T11:00:00",
+        "delay_hours": 4,
+        "status": "DELAYED"
+      },
+      "hotel": {
+        "name": "Miami Oceanfront Suites",
+        "city": "Miami",
+        "check_in": "2026-07-18",
+        "check_out": "2026-07-21",
+        "rate_per_night": 175.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "economy",
+      "total_paid": 280.00
+    },
+    {
+      "booking_id": "BKG-1006",
+      "ticket_id": "TKT-006",
+      "passenger": {
+        "name": "David Kim",
+        "email": "david.kim@email.com",
+        "loyalty_tier": "gold"
+      },
+      "flight": {
+        "airline": "Pacific Air",
+        "flight_number": "PA-1122",
+        "origin": "BOS",
+        "destination": "SFO",
+        "departure": "2026-07-25T09:00:00",
+        "arrival": "2026-07-25T12:30:00",
+        "status": "CONFIRMED"
+      },
+      "hotel": {
+        "name": "San Francisco Bay Hotel",
+        "city": "San Francisco",
+        "check_in": "2026-07-25",
+        "check_out": "2026-07-28",
+        "rate_per_night": 195.00,
+        "status": "CONFIRMED"
+      },
+      "fare_class": "premium_economy",
+      "total_paid": 520.00
+    }
+  ]
+}
