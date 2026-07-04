@@ -4,582 +4,413 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CaseClose — Agent Command Center</title>
-    <meta name="description" content="CaseClose autonomous AI agent command center — real-time reasoning, tool orchestration, and decision visualization">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="description" content="CaseClose AI Agent — autonomous travel ticket resolution with ReAct reasoning">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg-deep: #0b0f1a;
-            --bg-surface: #111827;
-            --bg-elevated: #1a2234;
-            --bg-card: #1e293b;
-            --bg-hover: #253348;
-            --border: rgba(148, 163, 184, 0.1);
-            --border-active: rgba(59, 130, 246, 0.4);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --text-dim: #475569;
+            --sidebar-bg: #1a1f36;
+            --sidebar-hover: #252b48;
+            --sidebar-active: #3b82f6;
+            --page-bg: #f5f0e8;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --card-shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+            --text-primary: #1a1f36;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
             --accent-blue: #3b82f6;
-            --accent-cyan: #22d3ee;
             --accent-green: #10b981;
-            --accent-emerald: #34d399;
             --accent-amber: #f59e0b;
             --accent-red: #ef4444;
-            --accent-purple: #a78bfa;
-            --accent-pink: #f472b6;
-            --glow-blue: 0 0 20px rgba(59, 130, 246, 0.15);
-            --glow-green: 0 0 20px rgba(16, 185, 129, 0.15);
-            --glow-amber: 0 0 20px rgba(245, 158, 11, 0.15);
-            --glow-red: 0 0 20px rgba(239, 68, 68, 0.15);
-            --mono: 'JetBrains Mono', 'Fira Code', monospace;
-            --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --radius: 10px;
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --border-light: #e5e7eb;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         body {
-            font-family: var(--sans);
-            background: var(--bg-deep);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--page-bg);
             color: var(--text-primary);
             display: flex;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        /* ═══════════════════════════════════════
-           LEFT PANEL — Case Queue + Memory
-           ═══════════════════════════════════════ */
-        .left-panel {
-            width: 340px;
-            min-width: 340px;
-            height: 100vh;
-            background: var(--bg-surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+        /* ══════════════════════════════════════
+           SIDEBAR
+           ══════════════════════════════════════ */
+        .sidebar {
+            width: 260px; min-height: 100vh;
+            background: var(--sidebar-bg);
+            padding: 24px 14px;
+            display: flex; flex-direction: column;
+            position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
         }
 
-        .panel-header {
-            padding: 20px 20px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .brand-icon {
-            width: 36px; height: 36px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; font-weight: 800; color: #fff;
-            box-shadow: var(--glow-blue);
-        }
-
-        .brand h1 {
-            font-size: 17px; font-weight: 800;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .brand span { font-size: 11px; color: var(--text-muted); display: block; margin-top: 1px; }
-
-        /* Agent Metrics Bar */
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
-        .metric {
-            text-align: center;
-            padding: 10px 4px;
-            background: var(--bg-elevated);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            transition: var(--transition);
-        }
-
-        .metric:hover { border-color: var(--border-active); }
-
-        .metric .m-val {
-            font-size: 20px; font-weight: 800;
-            font-family: var(--mono);
-            line-height: 1.1;
-        }
-
-        .metric .m-label {
-            font-size: 9px; font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-muted);
-            margin-top: 3px;
-        }
-
-        .metric.green .m-val { color: var(--accent-green); }
-        .metric.blue .m-val { color: var(--accent-blue); }
-        .metric.red .m-val { color: var(--accent-red); }
-        .metric.purple .m-val { color: var(--accent-purple); }
-
-        /* Case Queue */
-        .queue-header {
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .queue-header h2 {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
-
-        .queue-filters {
-            display: flex; gap: 4px;
-        }
-
-        .q-filter {
-            padding: 4px 10px; font-size: 11px; font-weight: 600;
-            border-radius: 6px; cursor: pointer; border: none;
-            background: transparent; color: var(--text-muted);
-            font-family: var(--sans); transition: var(--transition);
-        }
-
-        .q-filter.active { background: var(--accent-blue); color: #fff; }
-        .q-filter:hover:not(.active) { color: var(--text-primary); background: var(--bg-hover); }
-
-        .case-queue {
-            flex: 1;
-            overflow-y: auto;
-            padding: 4px 8px;
-        }
-
-        .case-item {
+        .sidebar-brand {
             display: flex; align-items: center; gap: 12px;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-            border: 1px solid transparent;
-            margin-bottom: 2px;
+            padding: 0 12px; margin-bottom: 32px;
         }
 
-        .case-item:hover { background: var(--bg-hover); }
-
-        .case-item.active {
-            background: rgba(59, 130, 246, 0.08);
-            border-color: var(--border-active);
+        .sidebar-brand .logo-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
         }
 
-        .case-item .case-status {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
+        .sidebar-brand .brand-text { color: #fff; }
+        .sidebar-brand .brand-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+        .sidebar-brand .brand-text span { font-size: 11px; color: #94a3b8; }
+
+        .sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 14px; border-radius: var(--radius-sm);
+            color: #94a3b8; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: var(--transition);
+            text-decoration: none;
         }
 
-        .case-item .case-status.resolved { background: var(--accent-green); box-shadow: var(--glow-green); }
-        .case-item .case-status.escalated { background: var(--accent-red); box-shadow: var(--glow-red); animation: pulse 2s infinite; }
+        .nav-item:hover { background: var(--sidebar-hover); color: #e2e8f0; }
+        .nav-item.active { background: var(--sidebar-active); color: #fff; }
+        .nav-item .nav-icon { font-size: 16px; width: 22px; text-align: center; }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .nav-item .badge {
+            margin-left: auto; background: var(--accent-red); color: #fff;
+            font-size: 11px; font-weight: 600; padding: 2px 8px;
+            border-radius: 20px; min-width: 22px; text-align: center;
         }
 
-        .case-item .case-info { flex: 1; min-width: 0; }
-
-        .case-item .case-id {
-            font-family: var(--mono);
-            font-size: 11px; font-weight: 600;
-            color: var(--text-muted);
+        /* Memory Section in Sidebar */
+        .sidebar-memory {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding: 16px 12px 0;
+            margin-top: 8px;
         }
 
-        .case-item .case-title {
-            font-size: 13px; font-weight: 600;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            margin-top: 2px;
+        .sidebar-memory h4 {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: #a78bfa; margin-bottom: 10px;
         }
 
-        .case-item .case-badge {
-            font-size: 10px; font-weight: 700; padding: 3px 8px;
-            border-radius: 20px; white-space: nowrap;
-        }
-
-        .case-badge.voucher { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
-        .case-badge.refund { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-        .case-badge.escalated { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
-
-        /* Memory Panel */
-        .memory-panel {
-            border-top: 1px solid var(--border);
-            padding: 14px 16px;
-            background: var(--bg-elevated);
-        }
-
-        .memory-panel h3 {
-            font-size: 10px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px;
-            color: var(--accent-purple); margin-bottom: 10px;
+        .mem-item {
+            font-size: 11px; color: #94a3b8; padding: 3px 0;
             display: flex; align-items: center; gap: 6px;
         }
 
-        .memory-item {
-            font-size: 12px;
-            color: var(--text-secondary);
-            padding: 4px 0;
-            display: flex; align-items: center; gap: 8px;
-            line-height: 1.4;
-        }
-
-        .memory-item .mem-icon { font-size: 12px; flex-shrink: 0; }
-
-        .pattern-alert {
-            margin-top: 8px;
-            padding: 8px 10px;
-            background: rgba(245, 158, 11, 0.08);
+        .mem-alert {
+            margin-top: 8px; padding: 7px 10px;
+            background: rgba(245, 158, 11, 0.1);
             border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 6px;
-            font-size: 11px;
-            color: var(--accent-amber);
-            line-height: 1.4;
+            border-radius: 6px; font-size: 10px; color: #fbbf24; line-height: 1.4;
         }
 
-        /* ═══════════════════════════════════════
-           MAIN PANEL — Agent Trace
-           ═══════════════════════════════════════ */
-        .main-panel {
-            flex: 1;
-            height: 100vh;
-            overflow-y: auto;
-            padding: 24px 32px;
-            display: flex;
-            flex-direction: column;
+        .sidebar-footer {
+            padding: 12px; border-top: 1px solid rgba(255,255,255,0.08);
+            color: #475569; font-size: 11px; margin-top: 12px;
+        }
+
+        /* ══════════════════════════════════════
+           MAIN CONTENT
+           ══════════════════════════════════════ */
+        .main-content {
+            margin-left: 260px; flex: 1;
+            padding: 24px 28px; min-height: 100vh;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 24px;
+        }
+
+        .stat-card {
+            padding: 18px 20px; border-radius: var(--radius-md);
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: var(--card-shadow); transition: var(--transition);
+        }
+
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
+
+        .stat-card.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .stat-card.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .stat-card.coral { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+        .stat-card.purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+
+        .stat-card .stat-icon {
+            width: 42px; height: 42px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; background: rgba(255,255,255,0.6);
+        }
+
+        .stat-card .stat-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+
+        /* Two-Column Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
             gap: 20px;
         }
 
-        .empty-state {
-            flex: 1;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            color: var(--text-dim); text-align: center;
+        /* Ticket Section */
+        .ticket-section {
+            background: var(--card-bg); border-radius: var(--radius-lg);
+            padding: 20px; box-shadow: var(--card-shadow);
         }
 
-        .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
-        .empty-state h2 { font-size: 18px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
-        .empty-state p { font-size: 13px; max-width: 400px; line-height: 1.6; }
-
-        /* Case Header */
-        .case-header {
-            display: flex; align-items: flex-start;
-            justify-content: space-between; gap: 20px;
+        .section-header {
+            display: flex; align-items: center;
+            justify-content: space-between; margin-bottom: 16px;
         }
 
-        .case-header .ch-left h2 {
-            font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+        .section-header h2 { font-size: 16px; font-weight: 700; }
+
+        .filter-tabs { display: flex; gap: 4px; background: #f3f4f6; padding: 3px; border-radius: var(--radius-sm); }
+
+        .filter-tab {
+            padding: 5px 12px; font-size: 12px; font-weight: 500;
+            border-radius: 6px; cursor: pointer; transition: var(--transition);
+            border: none; background: transparent; font-family: inherit; color: var(--text-secondary);
         }
 
-        .case-header .ch-meta {
-            font-size: 13px; color: var(--text-muted); margin-top: 4px;
-            display: flex; align-items: center; gap: 12px;
+        .filter-tab.active { background: #fff; color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .filter-tab:hover:not(.active) { color: var(--text-primary); }
+
+        /* Ticket Row */
+        .ticket-list { display: flex; flex-direction: column; gap: 2px; }
+
+        .ticket-row {
+            display: grid;
+            grid-template-columns: 40px 1fr 100px 80px 72px;
+            align-items: center; gap: 10px;
+            padding: 12px 10px; border-radius: var(--radius-sm);
+            cursor: pointer; transition: var(--transition);
         }
 
-        .case-header .ch-meta .sep { color: var(--text-dim); }
+        .ticket-row:hover { background: #f8fafc; }
+        .ticket-row.active { background: #eff6ff; }
 
-        .decision-badge {
-            padding: 8px 16px; border-radius: 8px;
-            font-size: 13px; font-weight: 700;
-            display: flex; align-items: center; gap: 8px;
+        .ticket-row .t-num { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+        .ticket-row .t-info { min-width: 0; }
+        .ticket-row .t-subject { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ticket-row .t-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+        .ticket-row .t-amount { font-size: 13px; font-weight: 700; text-align: right; }
+        .ticket-row .t-amount.green { color: var(--accent-green); }
+        .ticket-row .t-amount.blue { color: var(--accent-blue); }
+        .ticket-row .t-amount.red { color: var(--accent-red); }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 10px; font-weight: 600; white-space: nowrap; justify-content: center;
         }
 
-        .decision-badge.resolved {
-            background: rgba(16, 185, 129, 0.12);
-            color: var(--accent-emerald);
-            border: 1px solid rgba(16, 185, 129, 0.2);
+        .status-badge.resolved { background: #d1fae5; color: #065f46; }
+        .status-badge.escalated { background: #fee2e2; color: #991b1b; }
+        .status-badge.voucher { background: #dbeafe; color: #1e40af; }
+
+        .ticket-row .t-iters { font-size: 11px; color: var(--text-muted); text-align: center; }
+
+        /* Right Panel */
+        .right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        /* Agent Detail Panel */
+        .detail-panel {
+            background: var(--card-bg); border-radius: var(--radius-lg);
+            padding: 20px; box-shadow: var(--card-shadow);
+            flex: 1; overflow-y: auto; max-height: calc(100vh - 160px);
         }
 
-        .decision-badge.escalated {
-            background: rgba(239, 68, 68, 0.12);
-            color: var(--accent-red);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            animation: pulse 2s infinite;
+        .detail-panel .dp-empty {
+            text-align: center; padding: 60px 20px;
+            color: var(--text-muted); font-size: 13px;
         }
+
+        .detail-panel .dp-empty .dp-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
+
+        /* Detail Header */
+        .dp-header { margin-bottom: 18px; }
+        .dp-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .dp-header .dp-sub { font-size: 12px; color: var(--text-muted); }
+
+        /* Agent Stats Row */
+        .agent-stats {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 8px; margin-bottom: 16px;
+        }
+
+        .a-stat {
+            text-align: center; padding: 10px 6px;
+            background: #f8fafc; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .a-stat .as-val { font-size: 18px; font-weight: 800; }
+        .a-stat .as-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 2px; }
 
         /* ReAct Pipeline */
-        .react-pipeline {
+        .react-bar {
             display: flex; align-items: center; gap: 0;
-            background: var(--bg-surface);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            padding: 4px;
-            overflow: hidden;
+            background: #f8fafc; border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm); padding: 3px; margin-bottom: 16px; overflow: hidden;
         }
 
-        .react-phase {
-            flex: 1; text-align: center;
-            padding: 14px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-            position: relative;
+        .rp-step {
+            flex: 1; text-align: center; padding: 8px 4px;
+            border-radius: 6px; position: relative;
         }
 
-        .react-phase:not(:last-child)::after {
-            content: '→';
-            position: absolute; right: -8px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim); font-size: 14px;
-            z-index: 1;
+        .rp-step:not(:last-child)::after {
+            content: '\2192'; position: absolute; right: -6px; top: 50%;
+            transform: translateY(-50%); color: #d1d5db; font-size: 11px; z-index: 1;
         }
 
-        .react-phase .rp-icon { font-size: 18px; margin-bottom: 4px; }
+        .rp-step .rp-icon { font-size: 14px; }
+        .rp-step .rp-name { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 2px; }
+        .rp-step.done .rp-name { color: var(--accent-blue); }
+        .rp-step.done.plan .rp-name { color: var(--accent-amber); }
+        .rp-step.done.compute .rp-name { color: var(--accent-cyan); }
+        .rp-step.done.decide .rp-name { color: var(--accent-purple); }
+        .rp-step.done.act .rp-name { color: var(--accent-green); }
+        .rp-step.done.act-esc .rp-name { color: var(--accent-red); }
 
-        .react-phase .rp-label {
-            font-size: 10px; font-weight: 800;
-            text-transform: uppercase; letter-spacing: 0.8px;
-            color: var(--text-muted);
+        /* Detail Sections */
+        .d-section { margin-bottom: 14px; }
+
+        .d-section .ds-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;
+            display: flex; align-items: center; gap: 6px;
         }
 
-        .react-phase .rp-count {
-            font-size: 11px; font-weight: 500;
-            color: var(--text-dim); margin-top: 2px;
+        .ds-tag {
+            font-size: 8px; font-weight: 700; padding: 2px 6px;
+            border-radius: 3px; text-transform: uppercase;
         }
 
-        .react-phase.active { background: var(--bg-hover); }
-        .react-phase.completed { opacity: 1; }
-        .react-phase.plan.completed .rp-label { color: var(--accent-amber); }
-        .react-phase.gather.completed .rp-label { color: var(--accent-blue); }
-        .react-phase.compute.completed .rp-label { color: var(--accent-cyan); }
-        .react-phase.decide.completed .rp-label { color: var(--accent-purple); }
-        .react-phase.act.completed .rp-label { color: var(--accent-green); }
-
-        /* Section Cards */
-        .trace-section {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-        }
-
-        .trace-section .ts-header {
-            padding: 14px 20px;
-            display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .trace-section .ts-header:hover { background: var(--bg-hover); }
-
-        .trace-section .ts-header h3 {
-            font-size: 12px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.8px;
-            display: flex; align-items: center; gap: 8px;
-        }
-
-        .ts-header .ts-tag {
-            font-size: 9px; font-weight: 700; padding: 2px 8px;
-            border-radius: 4px; text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .ts-tag.amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
-        .ts-tag.blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
-        .ts-tag.cyan { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
-        .ts-tag.purple { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); }
-        .ts-tag.green { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-        .ts-tag.red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
-
-        .ts-body { padding: 16px 20px; }
+        .ds-tag.amber { background: #fef3c7; color: #92400e; }
+        .ds-tag.blue { background: #dbeafe; color: #1e40af; }
+        .ds-tag.cyan { background: #cffafe; color: #0e7490; }
+        .ds-tag.purple { background: #ede9fe; color: #6d28d9; }
+        .ds-tag.green { background: #d1fae5; color: #065f46; }
+        .ds-tag.red { background: #fee2e2; color: #991b1b; }
 
         /* Plan Box */
-        .plan-content {
-            font-size: 13px; line-height: 1.8;
-            color: var(--text-secondary);
-            white-space: pre-wrap;
-            font-family: var(--sans);
+        .plan-box {
+            background: #fefce8; border: 1px solid #fde68a;
+            border-radius: var(--radius-sm); padding: 12px 14px;
+            font-size: 12px; line-height: 1.7; color: #713f12;
+            white-space: pre-wrap; max-height: 160px; overflow-y: auto;
         }
 
-        /* Tool Execution Log */
-        .tool-log { display: flex; flex-direction: column; gap: 0; }
-
-        .tool-entry {
-            display: grid;
-            grid-template-columns: 24px 1fr 200px 60px 60px;
-            align-items: center; gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.05);
-            font-size: 13px;
+        /* Tool Log */
+        .tool-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 6px 0; font-size: 12px;
+            border-bottom: 1px solid #f3f4f6;
         }
 
-        .tool-entry:last-child { border-bottom: none; }
+        .tool-item:last-child { border-bottom: none; }
 
-        .tool-entry .te-status {
-            width: 20px; height: 20px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px;
+        .tool-item .ti-dot {
+            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
         }
 
-        .tool-entry .te-status.ok { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
-        .tool-entry .te-status.err { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .tool-item .ti-dot.ok { background: var(--accent-green); }
+        .tool-item .ti-dot.err { background: var(--accent-red); }
 
-        .tool-entry .te-name {
-            font-family: var(--mono);
-            font-weight: 600; font-size: 13px;
-            color: var(--text-primary);
+        .tool-item .ti-name {
+            font-weight: 600; font-size: 12px;
+            color: var(--text-primary); white-space: nowrap;
         }
 
-        .tool-entry .te-result {
-            font-size: 12px; color: var(--text-muted);
+        .tool-item .ti-result {
+            flex: 1; font-size: 11px; color: var(--text-muted);
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .tool-entry .te-iter {
-            font-family: var(--mono); font-size: 11px;
-            color: var(--text-dim); text-align: center;
+        .tool-item .ti-iter { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+
+        /* Refund Grid */
+        .refund-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
         }
 
-        .tool-entry .te-badge {
-            font-size: 10px; font-weight: 600; text-align: right;
-            color: var(--accent-green);
+        .rf-cell {
+            padding: 10px; text-align: center;
+            background: #f8fafc; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
         }
 
-        .tool-entry .te-badge.fail { color: var(--accent-red); }
+        .rf-cell .rf-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); margin-bottom: 3px; }
+        .rf-cell .rf-val { font-size: 18px; font-weight: 800; }
+        .rf-cell .rf-val.green { color: var(--accent-green); }
+        .rf-cell .rf-val.blue { color: var(--accent-blue); }
 
-        /* Reasoning Box */
-        .reasoning-content {
-            font-size: 14px; line-height: 1.8;
-            color: var(--text-secondary);
-            padding: 4px 0;
-            position: relative;
-            padding-left: 16px;
+        /* Threshold */
+        .threshold-row {
+            display: flex; align-items: center; gap: 10px;
+            margin-top: 8px; padding: 8px 10px;
+            background: #f8fafc; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light); font-size: 11px;
+        }
+
+        .threshold-row .th-label { color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+
+        .threshold-row .th-track { flex: 1; height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+        .threshold-row .th-fill { height: 100%; border-radius: 3px; }
+        .th-fill.safe { background: var(--accent-green); }
+        .th-fill.warn { background: var(--accent-amber); }
+        .th-fill.danger { background: var(--accent-red); }
+        .threshold-row .th-val { font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+
+        /* Reasoning */
+        .reason-box {
+            background: #f0f9ff; border: 1px solid #bae6fd;
+            border-radius: var(--radius-sm); padding: 12px 14px;
+            font-size: 13px; line-height: 1.7; color: #0c4a6e;
             border-left: 3px solid var(--accent-purple);
         }
 
-        /* Refund Breakdown */
-        .refund-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-        }
-
-        .refund-cell {
-            padding: 14px; text-align: center;
-            background: var(--bg-elevated);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .refund-cell .rc-label {
-            font-size: 10px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            color: var(--text-muted); margin-bottom: 6px;
-        }
-
-        .refund-cell .rc-value {
-            font-size: 22px; font-weight: 800;
-            font-family: var(--mono);
-        }
-
-        .refund-cell .rc-value.green { color: var(--accent-green); }
-        .refund-cell .rc-value.blue { color: var(--accent-blue); }
-        .refund-cell .rc-value.dim { color: var(--text-muted); }
-
-        .threshold-bar {
-            margin-top: 12px; padding: 10px 14px;
-            background: var(--bg-elevated);
-            border-radius: 8px; border: 1px solid var(--border);
-            display: flex; align-items: center; gap: 12px;
-        }
-
-        .threshold-bar .tb-label {
-            font-size: 11px; font-weight: 600; color: var(--text-muted);
-            white-space: nowrap;
-        }
-
-        .threshold-bar .tb-track {
-            flex: 1; height: 6px; background: var(--bg-card);
-            border-radius: 3px; overflow: hidden;
-        }
-
-        .threshold-bar .tb-fill {
-            height: 100%; border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-
-        .tb-fill.safe { background: var(--accent-green); }
-        .tb-fill.warn { background: var(--accent-amber); }
-        .tb-fill.danger { background: var(--accent-red); }
-
-        .threshold-bar .tb-value {
-            font-family: var(--mono); font-size: 12px;
-            font-weight: 600; color: var(--text-secondary);
-            white-space: nowrap;
-        }
-
         /* Guardrails */
-        .guardrails-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+        .guardrail-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
         }
 
-        .guardrail {
-            padding: 14px; text-align: center;
-            background: var(--bg-elevated);
-            border-radius: 8px;
-            border: 1px solid var(--border);
+        .gr-cell {
+            text-align: center; padding: 10px;
+            background: #f8fafc; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-light);
         }
 
-        .guardrail .gr-value {
-            font-family: var(--mono);
-            font-size: 18px; font-weight: 800;
+        .gr-cell .gr-val { font-size: 16px; font-weight: 800; }
+        .gr-cell .gr-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); margin-top: 2px; }
+
+        .gr-cell .gr-status {
+            font-size: 9px; font-weight: 600; margin-top: 4px;
+            padding: 1px 6px; border-radius: 3px; display: inline-block;
         }
 
-        .guardrail .gr-label {
-            font-size: 10px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            color: var(--text-muted); margin-top: 4px;
-        }
+        .gr-status.ok { background: #d1fae5; color: #065f46; }
+        .gr-status.warn { background: #fef3c7; color: #92400e; }
+        .gr-status.danger { background: #fee2e2; color: #991b1b; }
 
-        .guardrail .gr-status {
-            font-size: 10px; font-weight: 600;
-            margin-top: 6px; padding: 2px 8px;
-            border-radius: 4px; display: inline-block;
-        }
-
-        .gr-status.ok { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); }
-        .gr-status.warn { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); }
-        .gr-status.danger { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); }
-
-        /* Customer Message */
-        .customer-msg {
-            font-size: 13px; line-height: 1.7;
-            color: var(--text-secondary);
-            padding: 12px 16px;
-            background: var(--bg-elevated);
-            border-radius: 8px;
-            border-left: 3px solid var(--text-dim);
-        }
-
-        /* Policy */
-        .policy-text {
-            font-size: 12px; line-height: 1.6;
-            color: var(--text-muted);
-            font-style: italic;
-            padding: 10px 16px;
-            background: var(--bg-elevated);
-            border-radius: 8px;
+        /* Customer / Policy */
+        .quote-box {
+            font-size: 12px; line-height: 1.6; color: var(--text-secondary);
+            padding: 10px 14px; background: #f8fafc;
+            border-radius: var(--radius-sm); border-left: 3px solid var(--border-light);
+            max-height: 120px; overflow-y: auto;
         }
 
         /* Animations */
@@ -588,118 +419,142 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .trace-section { animation: fadeIn 0.3s ease forwards; }
-        .trace-section:nth-child(2) { animation-delay: 0.05s; }
-        .trace-section:nth-child(3) { animation-delay: 0.1s; }
-        .trace-section:nth-child(4) { animation-delay: 0.15s; }
-        .trace-section:nth-child(5) { animation-delay: 0.2s; }
-        .trace-section:nth-child(6) { animation-delay: 0.25s; }
-        .trace-section:nth-child(7) { animation-delay: 0.3s; }
+        .ticket-row { animation: fadeIn 0.3s ease forwards; }
+        .d-section { animation: fadeIn 0.25s ease forwards; }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
     </style>
 </head>
 <body>
 
-    <!-- ═══ LEFT PANEL ═══ -->
-    <aside class="left-panel">
-        <div class="panel-header">
-            <div class="brand">
-                <div class="brand-icon">CC</div>
-                <div>
-                    <h1>CaseClose</h1>
-                    <span>Autonomous Agent v1.1</span>
-                </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-icon">CC</div>
+            <div class="brand-text">
+                <h2>CaseClose</h2>
+                <span>Autonomous AI Agent</span>
             </div>
-            <div class="metrics-bar">
-                <div class="metric green"><div class="m-val" id="mResolved">—</div><div class="m-label">Resolved</div></div>
-                <div class="metric red"><div class="m-val" id="mEscalated">—</div><div class="m-label">Escalated</div></div>
-                <div class="metric blue"><div class="m-val" id="mTokens">—</div><div class="m-label">Tokens</div></div>
-                <div class="metric purple"><div class="m-val" id="mSaved">—</div><div class="m-label">Saved</div></div>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="nav-item active" onclick="setFilter('all', this)">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a class="nav-item" onclick="setFilter('all', this)">
+                <span class="nav-icon">📥</span> All Tickets
+                <span class="badge" id="badgeTotal">0</span>
+            </a>
+            <a class="nav-item" onclick="setFilter('escalated', this)">
+                <span class="nav-icon">🚨</span> Escalations
+                <span class="badge" id="badgeEsc">0</span>
+            </a>
+            <a class="nav-item" onclick="setFilter('resolved', this)">
+                <span class="nav-icon">✅</span> Resolved
+            </a>
+        </nav>
+
+        <div class="sidebar-memory" id="sidebarMemory">
+            <h4>🧠 Agent Memory</h4>
+            <div id="memContent">
+                <div class="mem-item">📦 No cases loaded</div>
             </div>
         </div>
 
-        <div class="queue-header">
-            <h2>Case Queue</h2>
-            <div class="queue-filters">
-                <button class="q-filter active" onclick="setFilter('all', this)">All</button>
-                <button class="q-filter" onclick="setFilter('resolved', this)">OK</button>
-                <button class="q-filter" onclick="setFilter('escalated', this)">Esc</button>
-            </div>
-        </div>
-
-        <div class="case-queue" id="caseQueue">
-            <div style="padding:40px 20px; text-align:center; color:var(--text-dim); font-size:13px;">Loading...</div>
-        </div>
-
-        <div class="memory-panel" id="memoryPanel">
-            <h3>🧠 Agent Memory</h3>
-            <div id="memoryContent">
-                <div class="memory-item"><span class="mem-icon">📊</span> No cases processed yet</div>
-            </div>
-        </div>
+        <div class="sidebar-footer">v1.1 — ReAct + Memory + Guardrails</div>
     </aside>
 
-    <!-- ═══ MAIN PANEL ═══ -->
-    <main class="main-panel" id="mainPanel">
-        <div class="empty-state">
-            <div class="empty-icon">🤖</div>
-            <h2>Select a case to inspect</h2>
-            <p>Click any ticket in the queue to view the agent's full reasoning trace, tool execution log, and decision analysis.</p>
+    <!-- MAIN -->
+    <main class="main-content">
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card green">
+                <div class="stat-icon">💰</div>
+                <div><div class="stat-value" id="sSaved">—</div><div class="stat-label">Business Cost Saved</div></div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-icon">✅</div>
+                <div><div class="stat-value" id="sResolved">—</div><div class="stat-label">Auto-Resolved</div></div>
+            </div>
+            <div class="stat-card coral">
+                <div class="stat-icon">🚨</div>
+                <div><div class="stat-value" id="sEscalated">—</div><div class="stat-label">Escalations</div></div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-icon">⚡</div>
+                <div><div class="stat-value" id="sTokens">—</div><div class="stat-label">Total Tokens</div></div>
+            </div>
+        </div>
+
+        <!-- Two-Column -->
+        <div class="content-grid">
+            <!-- Ticket List -->
+            <div class="ticket-section">
+                <div class="section-header">
+                    <h2>Processed Tickets</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="setTab('all', this)">All</button>
+                        <button class="filter-tab" onclick="setTab('resolved', this)">Resolved</button>
+                        <button class="filter-tab" onclick="setTab('escalated', this)">Escalated</button>
+                    </div>
+                </div>
+                <div class="ticket-list" id="ticketList">
+                    <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:13px;">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Agent Trace Panel -->
+            <div class="right-panel">
+                <div class="detail-panel" id="detailPanel">
+                    <div class="dp-empty">
+                        <div class="dp-icon">🤖</div>
+                        <p>Select a ticket to inspect the agent's reasoning, tool calls, and decision trace.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
     <script>
-    // ═══════════════════════════════════════
-    // STATE
-    // ═══════════════════════════════════════
-    let CASES = [];
-    let TICKETS = [];
-    let activeCase = null;
-    let currentFilter = 'all';
+    let CASES = [], TICKETS = [], activeCase = null, currentFilter = 'all';
 
-    // ═══════════════════════════════════════
-    // DATA LOADING
-    // ═══════════════════════════════════════
+    // ═══ Load Data ═══
     async function loadData() {
         try {
-            const [casesRes, ticketsRes] = await Promise.all([
-                fetch('/api/cases'),
-                fetch('/api/tickets'),
-            ]);
-            CASES = await casesRes.json();
-            TICKETS = await ticketsRes.json();
+            const [cr, tr] = await Promise.all([fetch('/api/cases'), fetch('/api/tickets')]);
+            CASES = await cr.json();
+            TICKETS = await tr.json();
 
-            const ticketMap = {};
-            TICKETS.forEach(t => ticketMap[t.id] = t);
+            const tm = {};
+            TICKETS.forEach(t => tm[t.id] = t);
             CASES.forEach(c => {
-                const t = ticketMap[c.ticket_id];
-                if (t) { c._subject = t.subject; c._body = t.body; c._channel = t.channel; }
+                const t = tm[c.ticket_id];
+                if (t) {
+                    c._subject = t.subject;
+                    c._body = t.body;
+                    c._channel = t.channel;
+                }
             });
 
-            updateMetrics();
-            renderQueue();
+            updateStats();
+            renderTickets();
             updateMemory();
-
-            // Auto-select first case
             if (CASES.length > 0) selectCase(CASES[0].ticket_id);
-        } catch (err) {
-            document.getElementById('caseQueue').innerHTML =
-                `<div style="padding:20px; color:var(--accent-red); font-size:12px;">API error: ${err.message}<br><br>Run: python server.py</div>`;
+        } catch (e) {
+            document.getElementById('ticketList').innerHTML =
+                `<div style="padding:30px;text-align:center;color:var(--accent-red);font-size:13px;">
+                    Cannot reach API. Run <strong>python server.py</strong> first.<br>Error: ${esc(e.message)}
+                </div>`;
         }
     }
 
-    // ═══════════════════════════════════════
-    // METRICS
-    // ═══════════════════════════════════════
-    function updateMetrics() {
-        const resolved = CASES.filter(c => c.decision?.startsWith('RESOLVED')).length;
+    // ═══ Stats ═══
+    function updateStats() {
+        const resolved = CASES.filter(c => c.decision && c.decision.startsWith('RESOLVED')).length;
         const escalated = CASES.filter(c => c.decision === 'ESCALATED').length;
-        const totalTokens = CASES.reduce((s, c) => s + (c.total_tokens_used || 0), 0);
+        const tokens = CASES.reduce((s, c) => s + (c.total_tokens_used || 0), 0);
         let saved = 0;
         CASES.forEach(c => {
             if (c.decision === 'RESOLVED_VOUCHER' && c.refund_calculation) {
@@ -707,331 +562,229 @@
             }
         });
 
-        document.getElementById('mResolved').textContent = String(resolved).padStart(2, '0');
-        document.getElementById('mEscalated').textContent = String(escalated).padStart(2, '0');
-        document.getElementById('mTokens').textContent = totalTokens > 1000 ? Math.round(totalTokens / 1000) + 'K' : totalTokens || '—';
-        document.getElementById('mSaved').textContent = saved > 0 ? '$' + Math.round(saved) : '—';
+        document.getElementById('sSaved').textContent = '$' + Math.round(saved);
+        document.getElementById('sResolved').textContent = String(resolved).padStart(2, '0');
+        document.getElementById('sEscalated').textContent = String(escalated).padStart(2, '0');
+        document.getElementById('sTokens').textContent = tokens > 0 ? tokens.toLocaleString() : '—';
+        document.getElementById('badgeTotal').textContent = CASES.length;
+        document.getElementById('badgeEsc').textContent = escalated;
     }
 
-    // ═══════════════════════════════════════
-    // MEMORY PANEL
-    // ═══════════════════════════════════════
+    // ═══ Memory ═══
     function updateMemory() {
-        const el = document.getElementById('memoryContent');
-        if (CASES.length === 0) return;
+        const el = document.getElementById('memContent');
+        if (!CASES.length) return;
 
         const airlines = {};
-        let totalCash = 0;
-        let escalations = 0;
+        let totalCash = 0, escalations = 0;
         CASES.forEach(c => {
-            const rc = c.refund_calculation;
-            if (rc?.cash_refund_amount) totalCash += rc.cash_refund_amount;
+            if (c.refund_calculation) totalCash += c.refund_calculation.cash_refund_amount || 0;
             if (c.decision === 'ESCALATED') escalations++;
-            // Extract airline from tools_called or thought_trace
-            const trace = JSON.stringify(c.thought_trace || []);
+            const s = JSON.stringify(c.thought_trace || c.tools_called || []);
             ['SkyWest Airlines', 'Pacific Air', 'Atlantic Airways'].forEach(a => {
-                if (trace.includes(a)) airlines[a] = (airlines[a] || 0) + 1;
+                if (s.includes(a)) airlines[a] = (airlines[a] || 0) + 1;
             });
         });
 
-        let html = '';
-        html += `<div class="memory-item"><span class="mem-icon">📦</span> ${CASES.length} cases in working memory</div>`;
-        html += `<div class="memory-item"><span class="mem-icon">💰</span> $${Math.round(totalCash)} cumulative refunds processed</div>`;
+        const autoRate = Math.round(CASES.filter(c => c.decision && c.decision.startsWith('RESOLVED')).length / CASES.length * 100);
 
-        const autonomyRate = CASES.length > 0
-            ? Math.round(CASES.filter(c => c.decision?.startsWith('RESOLVED')).length / CASES.length * 100) : 0;
-        html += `<div class="memory-item"><span class="mem-icon">🤖</span> ${autonomyRate}% autonomous resolution rate</div>`;
+        let h = '';
+        h += `<div class="mem-item">📦 ${CASES.length} cases in working memory</div>`;
+        h += `<div class="mem-item">💰 $${Math.round(totalCash)} cumulative refunds</div>`;
+        h += `<div class="mem-item">🤖 ${autoRate}% autonomous resolution rate</div>`;
 
-        // Pattern alerts
-        Object.entries(airlines).forEach(([airline, count]) => {
-            if (count >= 2) {
-                html += `<div class="pattern-alert">⚠️ Pattern: ${count} issues with ${airline} — possible systemic problem</div>`;
-            }
+        Object.entries(airlines).forEach(([a, n]) => {
+            if (n >= 2) h += `<div class="mem-alert">⚠ ${n} issues with ${a} — possible systemic problem</div>`;
         });
+        if (escalations >= 2) h += `<div class="mem-alert">⚠ ${escalations} escalations this session</div>`;
 
-        if (escalations >= 2) {
-            html += `<div class="pattern-alert">⚠️ ${escalations} escalations — high escalation rate may indicate policy gaps</div>`;
-        }
-
-        el.innerHTML = html;
+        el.innerHTML = h;
     }
 
-    // ═══════════════════════════════════════
-    // CASE QUEUE
-    // ═══════════════════════════════════════
-    function renderQueue() {
-        const el = document.getElementById('caseQueue');
-        let filtered = CASES;
+    // ═══ Ticket List ═══
+    function renderTickets() {
+        const el = document.getElementById('ticketList');
+        let list = CASES;
 
-        if (currentFilter === 'resolved') filtered = filtered.filter(c => c.decision?.startsWith('RESOLVED'));
-        else if (currentFilter === 'escalated') filtered = filtered.filter(c => c.decision === 'ESCALATED');
+        if (currentFilter === 'resolved') list = list.filter(c => c.decision && c.decision.startsWith('RESOLVED'));
+        else if (currentFilter === 'escalated') list = list.filter(c => c.decision === 'ESCALATED');
 
-        if (filtered.length === 0) {
-            el.innerHTML = '<div style="padding:30px; text-align:center; color:var(--text-dim); font-size:12px;">No matching cases.</div>';
-            return;
-        }
+        if (!list.length) { el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted);">No matching tickets.</p>'; return; }
 
-        el.innerHTML = filtered.map(c => {
+        const labels = { airline_cancellation:'Airline Cancel', customer_cancellation:'Customer Cancel', schedule_change:'Schedule Change', missed_connection:'Missed Connection', delay:'Flight Delay' };
+
+        el.innerHTML = list.map(c => {
             const d = c.decision || 'UNKNOWN';
             const isEsc = d === 'ESCALATED';
-            const isRefund = d === 'RESOLVED_REFUND';
-            const statusClass = isEsc ? 'escalated' : 'resolved';
-            const badgeClass = isEsc ? 'escalated' : isRefund ? 'refund' : 'voucher';
-            const badgeText = isEsc ? 'ESC' : isRefund ? 'REFUND' : 'VOUCHER';
+            const isRef = d === 'RESOLVED_REFUND';
+            const rc = c.refund_calculation || {};
+            const amt = isRef ? rc.cash_refund_amount : rc.voucher_equivalent_amount;
+            const amtClass = isEsc ? 'red' : isRef ? 'green' : 'blue';
+            const badgeClass = isEsc ? 'escalated' : isRef ? 'resolved' : 'voucher';
+            const badgeText = isEsc ? '🚨 Escalated' : isRef ? '✅ Refund' : '💳 Voucher';
             const isActive = activeCase === c.ticket_id;
+            const iters = c.iterations_used || 0;
 
             return `
-                <div class="case-item ${isActive ? 'active' : ''}" onclick="selectCase('${c.ticket_id}')">
-                    <div class="case-status ${statusClass}"></div>
-                    <div class="case-info">
-                        <div class="case-id">${c.ticket_id}</div>
-                        <div class="case-title">${c._subject || c.issue_type || c.ticket_id}</div>
+                <div class="ticket-row ${isActive ? 'active' : ''}" onclick="selectCase('${c.ticket_id}')">
+                    <span class="t-num">${(c.ticket_id || '').replace('TKT-','#')}</span>
+                    <div class="t-info">
+                        <div class="t-subject">${esc(c._subject || c.ticket_id)}</div>
+                        <div class="t-meta">${labels[c.issue_type] || c.issue_type || '—'}</div>
                     </div>
-                    <span class="case-badge ${badgeClass}">${badgeText}</span>
+                    <span class="t-amount ${amtClass}">${amt != null ? '$'+amt : '—'}</span>
+                    <span class="status-badge ${badgeClass}">${badgeText}</span>
+                    <span class="t-iters">${iters > 0 ? iters+'it' : '—'}</span>
                 </div>
             `;
         }).join('');
     }
 
-    function setFilter(f, btn) {
+    function setTab(f, btn) {
         currentFilter = f;
-        document.querySelectorAll('.q-filter').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderQueue();
+        renderTickets();
     }
 
-    // ═══════════════════════════════════════
-    // SELECT CASE — Render the full trace
-    // ═══════════════════════════════════════
-    function selectCase(ticketId) {
-        activeCase = ticketId;
-        renderQueue();
-        const c = CASES.find(x => x.ticket_id === ticketId);
-        if (!c) return;
-        renderTrace(c);
+    function setFilter(f, el) {
+        currentFilter = f === 'escalated' ? 'escalated' : f === 'resolved' ? 'resolved' : 'all';
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        const tabs = document.querySelectorAll('.filter-tab');
+        tabs.forEach(t => t.classList.remove('active'));
+        if (currentFilter === 'all') tabs[0]?.classList.add('active');
+        else if (currentFilter === 'resolved') tabs[1]?.classList.add('active');
+        else tabs[2]?.classList.add('active');
+        renderTickets();
     }
 
-    function renderTrace(c) {
-        const main = document.getElementById('mainPanel');
+    // ═══ Select Case → Render Trace ═══
+    function selectCase(id) {
+        activeCase = id;
+        renderTickets();
+        const c = CASES.find(x => x.ticket_id === id);
+        if (c) renderDetail(c);
+    }
+
+    function renderDetail(c) {
+        const p = document.getElementById('detailPanel');
         const rc = c.refund_calculation || {};
         const isEsc = c.decision === 'ESCALATED';
-        const isRefund = c.decision === 'RESOLVED_REFUND';
-        const trace = c.thought_trace || [];
+        const isRef = c.decision === 'RESOLVED_REFUND';
         const tools = c.tools_called || [];
+        const trace = c.thought_trace || [];
 
-        // Classify phases
         const hasPlan = !!c.execution_plan;
-        const hasGather = tools.some(t => ['get_booking', 'get_policy', 'estimate_urgency', 'check_itinerary_conflict', 'search_alternate_flights'].includes(t.tool));
+        const hasGather = tools.some(t => ['get_booking','get_policy','estimate_urgency','check_itinerary_conflict','search_alternate_flights'].includes(t.tool));
         const hasCompute = tools.some(t => t.tool === 'calculate_refund');
         const hasReason = !!c.reasoning;
         const hasAct = tools.some(t => t.tool === 'finalize_case');
 
-        const decisionClass = isEsc ? 'escalated' : 'resolved';
-        const decisionLabel = isEsc ? '🚨 ESCALATED' : isRefund ? '✅ REFUND' : '💳 VOUCHER';
-        const decisionDetail = isEsc ? 'Requires Human Review' : isRefund
-            ? `Cash $${rc.cash_refund_amount || 0}` : `Voucher $${rc.voucher_equivalent_amount || 0}`;
+        let h = '';
 
-        let html = '';
+        // Header
+        const decLabel = isEsc ? '🚨 ESCALATED' : isRef ? '✅ REFUND' : '💳 VOUCHER';
+        h += `<div class="dp-header"><h3>${esc(c.ticket_id)} — ${esc(c._subject || c.issue_type || '')}</h3><div class="dp-sub">${esc(c.issue_type || '')} · ${esc(c._channel || '')} · ${decLabel}</div></div>`;
 
-        // ── Case Header ──
-        html += `
-            <div class="case-header">
-                <div class="ch-left">
-                    <h2>${c.ticket_id} — ${c._subject || c.issue_type}</h2>
-                    <div class="ch-meta">
-                        <span>${c.issue_type || '—'}</span>
-                        <span class="sep">·</span>
-                        <span>${c._channel || '—'}</span>
-                        <span class="sep">·</span>
-                        <span>${c.iterations_used || 0} iterations</span>
-                        <span class="sep">·</span>
-                        <span>${c.llm_calls || 0} LLM calls</span>
-                        <span class="sep">·</span>
-                        <span>${(c.total_tokens_used || 0).toLocaleString()} tokens</span>
-                        <span class="sep">·</span>
-                        <span>${c.elapsed_seconds || 0}s</span>
-                    </div>
-                </div>
-                <div class="decision-badge ${decisionClass}">
-                    ${decisionLabel}<span style="font-weight:400;font-size:12px;opacity:0.7;">— ${decisionDetail}</span>
-                </div>
-            </div>
-        `;
+        // Agent Stats
+        h += `<div class="agent-stats">
+            <div class="a-stat"><div class="as-val">${c.iterations_used || 0}</div><div class="as-label">Iterations</div></div>
+            <div class="a-stat"><div class="as-val">${c.llm_calls || 0}</div><div class="as-label">LLM Calls</div></div>
+            <div class="a-stat"><div class="as-val">${(c.total_tokens_used || 0).toLocaleString()}</div><div class="as-label">Tokens</div></div>
+            <div class="a-stat"><div class="as-val">${c.elapsed_seconds || 0}s</div><div class="as-label">Time</div></div>
+        </div>`;
 
-        // ── ReAct Pipeline ──
-        html += `
-            <div class="react-pipeline">
-                <div class="react-phase plan ${hasPlan ? 'completed' : ''}">
-                    <div class="rp-icon">📋</div>
-                    <div class="rp-label">Plan</div>
-                    <div class="rp-count">${hasPlan ? '1 plan' : '—'}</div>
-                </div>
-                <div class="react-phase gather ${hasGather ? 'completed' : ''}">
-                    <div class="rp-icon">🔍</div>
-                    <div class="rp-label">Gather</div>
-                    <div class="rp-count">${tools.filter(t => ['get_booking','get_policy','estimate_urgency','check_itinerary_conflict','search_alternate_flights'].includes(t.tool)).length} tools</div>
-                </div>
-                <div class="react-phase compute ${hasCompute ? 'completed' : ''}">
-                    <div class="rp-icon">🧮</div>
-                    <div class="rp-label">Compute</div>
-                    <div class="rp-count">${hasCompute ? 'deterministic' : '—'}</div>
-                </div>
-                <div class="react-phase decide ${hasReason ? 'completed' : ''}">
-                    <div class="rp-icon">⚖️</div>
-                    <div class="rp-label">Decide</div>
-                    <div class="rp-count">${hasReason ? 'tradeoff' : '—'}</div>
-                </div>
-                <div class="react-phase act ${hasAct ? 'completed' : ''}">
-                    <div class="rp-icon">${isEsc ? '🚨' : '✅'}</div>
-                    <div class="rp-label">Act</div>
-                    <div class="rp-count">${c.decision ? c.decision.replace('RESOLVED_', '').toLowerCase() : '—'}</div>
-                </div>
-            </div>
-        `;
+        // ReAct Pipeline
+        h += `<div class="react-bar">
+            <div class="rp-step plan ${hasPlan?'done':''}"><div class="rp-icon">📋</div><div class="rp-name">Plan</div></div>
+            <div class="rp-step ${hasGather?'done':''}"><div class="rp-icon">🔍</div><div class="rp-name">Gather</div></div>
+            <div class="rp-step compute ${hasCompute?'done':''}"><div class="rp-icon">🧮</div><div class="rp-name">Compute</div></div>
+            <div class="rp-step decide ${hasReason?'done':''}"><div class="rp-icon">⚖️</div><div class="rp-name">Decide</div></div>
+            <div class="rp-step ${isEsc?'act-esc':'act'} ${hasAct?'done':''}"><div class="rp-icon">${isEsc?'🚨':'✅'}</div><div class="rp-name">Act</div></div>
+        </div>`;
 
-        // ── 1. Execution Plan ──
+        // Plan
         if (c.execution_plan) {
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3><span class="ts-tag amber">Plan</span> Agent Execution Plan</h3><span style="font-size:11px;color:var(--text-dim);">Iter 0 · Pre-execution</span></div>
-                    <div class="ts-body"><div class="plan-content">${escHtml(c.execution_plan)}</div></div>
-                </div>
-            `;
+            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag amber">Plan</span> Execution Plan</div><div class="plan-box">${esc(c.execution_plan)}</div></div>`;
         }
 
-        // ── 2. Tool Execution Log ──
+        // Tool Log
         if (tools.length > 0) {
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3><span class="ts-tag blue">Gather + Compute</span> Tool Execution Log</h3><span style="font-size:11px;color:var(--text-dim);">${tools.length} calls</span></div>
-                    <div class="ts-body"><div class="tool-log">
-            `;
-
+            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag blue">Gather</span> Tool Execution (${tools.length} calls)</div>`;
             tools.forEach(t => {
-                const statusClass = t.success !== false ? 'ok' : 'err';
-                const statusIcon = t.success !== false ? '✓' : '✗';
-                const badgeClass = t.success !== false ? '' : 'fail';
-
-                // Get result summary from thought_trace
-                const traceStep = trace.find(s => s.tool === t.tool && s.iteration === t.iteration && s.type === 'tool_result');
-                const summary = traceStep?.result_summary || t.args_summary || '';
-
-                html += `
-                    <div class="tool-entry">
-                        <div class="te-status ${statusClass}">${statusIcon}</div>
-                        <div class="te-name">${t.tool}</div>
-                        <div class="te-result" title="${escAttr(summary)}">${escHtml(summary)}</div>
-                        <div class="te-iter">iter ${t.iteration}</div>
-                        <div class="te-badge ${badgeClass}">${t.success !== false ? 'OK' : 'FAIL'}</div>
-                    </div>
-                `;
+                const dot = t.success !== false ? 'ok' : 'err';
+                const ts = trace.find(s => s.tool === t.tool && s.iteration === t.iteration && s.type === 'tool_result');
+                const summary = ts ? ts.result_summary : (t.args_summary || '');
+                h += `<div class="tool-item">
+                    <div class="ti-dot ${dot}"></div>
+                    <span class="ti-name">${esc(t.tool)}</span>
+                    <span class="ti-result" title="${esc(summary)}">${esc(summary)}</span>
+                    <span class="ti-iter">iter ${t.iteration}</span>
+                </div>`;
             });
-
-            html += `</div></div></div>`;
+            h += `</div>`;
         }
 
-        // ── 3. Refund Calculation (Deterministic) ──
-        if (rc.cash_refund_amount !== undefined) {
+        // Refund
+        if (rc.cash_refund_amount != null) {
             const pct = rc.auto_approve_max > 0 ? Math.min(100, Math.round(rc.cash_refund_amount / rc.auto_approve_max * 100)) : 0;
-            const fillClass = pct > 100 ? 'danger' : pct > 80 ? 'warn' : 'safe';
-
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3><span class="ts-tag cyan">Compute</span> Deterministic Refund Calculation</h3><span style="font-size:11px;color:var(--text-dim);">No LLM</span></div>
-                    <div class="ts-body">
-                        <div class="refund-grid">
-                            <div class="refund-cell"><div class="rc-label">Cash Refund</div><div class="rc-value green">$${rc.cash_refund_amount}</div></div>
-                            <div class="refund-cell"><div class="rc-label">Voucher Value</div><div class="rc-value blue">$${rc.voucher_equivalent_amount}</div></div>
-                            <div class="refund-cell"><div class="rc-label">Biz Cost (Cash)</div><div class="rc-value dim">$${rc.cost_to_business_cash}</div></div>
-                            <div class="refund-cell"><div class="rc-label">Biz Cost (Voucher)</div><div class="rc-value dim">$${rc.cost_to_business_voucher}</div></div>
-                        </div>
-                        <div class="threshold-bar">
-                            <div class="tb-label">Auto-Approve Threshold</div>
-                            <div class="tb-track"><div class="tb-fill ${fillClass}" style="width:${Math.min(pct, 100)}%"></div></div>
-                            <div class="tb-value">$${rc.cash_refund_amount} / $${rc.auto_approve_max}</div>
-                        </div>
-                    </div>
+            const fill = pct > 100 ? 'danger' : pct > 80 ? 'warn' : 'safe';
+            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag cyan">Compute</span> Deterministic Refund</div>
+                <div class="refund-grid">
+                    <div class="rf-cell"><div class="rf-label">Cash Refund</div><div class="rf-val green">$${rc.cash_refund_amount}</div></div>
+                    <div class="rf-cell"><div class="rf-label">Voucher Value</div><div class="rf-val blue">$${rc.voucher_equivalent_amount}</div></div>
+                    <div class="rf-cell"><div class="rf-label">Biz Cost (Cash)</div><div class="rf-val">$${rc.cost_to_business_cash}</div></div>
+                    <div class="rf-cell"><div class="rf-label">Biz Cost (Voucher)</div><div class="rf-val">$${rc.cost_to_business_voucher}</div></div>
                 </div>
-            `;
+                <div class="threshold-row">
+                    <div class="th-label">Auto-Approve</div>
+                    <div class="th-track"><div class="th-fill ${fill}" style="width:${Math.min(pct,100)}%"></div></div>
+                    <div class="th-val">$${rc.cash_refund_amount} / $${rc.auto_approve_max}</div>
+                </div>
+            </div>`;
         }
 
-        // ── 4. AI Reasoning ──
+        // Reasoning
         if (c.reasoning) {
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3><span class="ts-tag purple">Decide</span> AI Reasoning — Tradeoff Analysis</h3></div>
-                    <div class="ts-body"><div class="reasoning-content">${escHtml(c.reasoning)}</div></div>
-                </div>
-            `;
+            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag purple">Decide</span> AI Reasoning</div><div class="reason-box">${esc(c.reasoning)}</div></div>`;
         }
 
-        // ── 5. Guardrails ──
-        const iterPct = c.iterations_used && 6 ? Math.round(c.iterations_used / 6 * 100) : 0;
-        const iterStatus = iterPct >= 100 ? 'danger' : iterPct > 66 ? 'warn' : 'ok';
-        const thresholdStatus = rc.exceeds_auto_approve ? 'danger' : 'ok';
-        const corrections = c.self_corrections || 0;
-        const corrStatus = corrections > 0 ? 'warn' : 'ok';
+        // Guardrails
+        const iterPct = c.iterations_used ? Math.round(c.iterations_used / 6 * 100) : 0;
+        const iterSt = iterPct >= 100 ? 'danger' : iterPct > 66 ? 'warn' : 'ok';
+        const thSt = rc.exceeds_auto_approve ? 'danger' : 'ok';
+        const corr = c.self_corrections || 0;
+        const corrSt = corr > 0 ? 'warn' : 'ok';
 
-        html += `
-            <div class="trace-section">
-                <div class="ts-header"><h3><span class="ts-tag red">Safety</span> Guardrails & Constraints</h3></div>
-                <div class="ts-body">
-                    <div class="guardrails-grid">
-                        <div class="guardrail">
-                            <div class="gr-value">${c.iterations_used || 0} / 6</div>
-                            <div class="gr-label">Iteration Cap</div>
-                            <div class="gr-status ${iterStatus}">${iterPct >= 100 ? 'CAP REACHED' : 'Within Limit'}</div>
-                        </div>
-                        <div class="guardrail">
-                            <div class="gr-value">$${rc.auto_approve_max || 500}</div>
-                            <div class="gr-label">Auto-Approve Max</div>
-                            <div class="gr-status ${thresholdStatus}">${rc.exceeds_auto_approve ? 'EXCEEDED' : 'Within Limit'}</div>
-                        </div>
-                        <div class="guardrail">
-                            <div class="gr-value">${corrections}</div>
-                            <div class="gr-label">Self-Corrections</div>
-                            <div class="gr-status ${corrStatus}">${corrections > 0 ? corrections + ' Recovery' : 'No Errors'}</div>
-                        </div>
-                    </div>
-                </div>
+        h += `<div class="d-section"><div class="ds-label"><span class="ds-tag red">Safety</span> Guardrails</div>
+            <div class="guardrail-row">
+                <div class="gr-cell"><div class="gr-val">${c.iterations_used||0}/6</div><div class="gr-label">Iter Cap</div><div class="gr-status ${iterSt}">${iterPct>=100?'HIT':'OK'}</div></div>
+                <div class="gr-cell"><div class="gr-val">$${rc.auto_approve_max||500}</div><div class="gr-label">Approve Limit</div><div class="gr-status ${thSt}">${rc.exceeds_auto_approve?'EXCEEDED':'OK'}</div></div>
+                <div class="gr-cell"><div class="gr-val">${corr}</div><div class="gr-label">Self-Correct</div><div class="gr-status ${corrSt}">${corr>0?corr+' FIX':'CLEAN'}</div></div>
             </div>
-        `;
+        </div>`;
 
-        // ── 6. Customer Message ──
+        // Customer
         if (c._body) {
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3>Customer Input</h3></div>
-                    <div class="ts-body"><div class="customer-msg">${escHtml(c._body)}</div></div>
-                </div>
-            `;
+            h += `<div class="d-section"><div class="ds-label">Customer Input</div><div class="quote-box">${esc(c._body)}</div></div>`;
         }
 
-        // ── 7. Policy Cited ──
+        // Policy
         if (c.policy_cited) {
-            html += `
-                <div class="trace-section">
-                    <div class="ts-header"><h3>Policy Cited</h3></div>
-                    <div class="ts-body"><div class="policy-text">${escHtml(c.policy_cited)}</div></div>
-                </div>
-            `;
+            h += `<div class="d-section"><div class="ds-label">Policy Cited</div><div class="quote-box" style="font-style:italic;">${esc(c.policy_cited)}</div></div>`;
         }
 
-        main.innerHTML = html;
+        p.innerHTML = h;
     }
 
-    // ═══════════════════════════════════════
-    // UTILS
-    // ═══════════════════════════════════════
-    function escHtml(s) {
+    // ═══ Utils ═══
+    function esc(s) {
         if (!s) return '';
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
-    function escAttr(s) { return escHtml(s); }
 
-    // ═══════════════════════════════════════
-    // INIT
-    // ═══════════════════════════════════════
+    // ═══ Init ═══
     loadData();
     </script>
 </body>
