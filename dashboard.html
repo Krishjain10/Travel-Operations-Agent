@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CaseClose — Autonomous Travel Operations Dashboard</title>
+    <meta name="description" content="CaseClose AI Agent Dashboard for autonomous travel support ticket resolution">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           CSS RESET & VARIABLES
+           ======================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --sidebar-bg: #1a1f36;
+            --sidebar-hover: #252b48;
+            --sidebar-active: #3b82f6;
+            --page-bg: #f5f0e8;
+            --card-bg: #ffffff;
+            --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            --card-shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+            --text-primary: #1a1f36;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-coral: #f97066;
+            --banner-bg: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            --stat-green: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            --stat-blue: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            --stat-coral: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            --stat-purple: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+            --border-light: #e5e7eb;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--page-bg);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ========================================
+           SIDEBAR
+           ======================================== */
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background: var(--sidebar-bg);
+            padding: 28px 16px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px;
+            margin-bottom: 40px;
+        }
+
+        .sidebar-brand .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-blue);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .sidebar-brand .brand-text {
+            color: #fff;
+        }
+
+        .sidebar-brand .brand-text h2 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .sidebar-brand .brand-text span {
+            font-size: 11px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: var(--sidebar-hover);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: var(--sidebar-active);
+            color: #ffffff;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--accent-red);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 20px;
+            min-width: 22px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* ========================================
+           MAIN CONTENT
+           ======================================== */
+        .main-content {
+            margin-left: 240px;
+            flex: 1;
+            padding: 24px 32px;
+            min-height: 100vh;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .search-box {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            border: 1px solid var(--border-light);
+            border-radius: 30px;
+            font-family: inherit;
+            font-size: 13px;
+            background: var(--card-bg);
+            transition: var(--transition);
+            outline: none;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .top-bar-right .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 16px;
+            position: relative;
+        }
+
+        .top-bar-right .icon-btn:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-1px);
+        }
+
+        .top-bar-right .icon-btn .notif-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-red);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-profile .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-profile .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* ========================================
+           DASHBOARD GRID
+           ======================================== */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 24px;
+        }
+
+        /* ========================================
+           BANNER
+           ======================================== */
+        .welcome-banner {
+            background: var(--banner-bg);
+            border-radius: var(--radius-xl);
+            padding: 28px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: -20px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .welcome-banner .banner-content {
+            z-index: 1;
+        }
+
+        .welcome-banner h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .welcome-banner p {
+            font-size: 14px;
+            color: rgba(26, 31, 54, 0.7);
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        .welcome-banner .banner-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+            padding: 10px 20px;
+            background: var(--text-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .welcome-banner .banner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .welcome-banner .banner-illustration {
+            font-size: 72px;
+            z-index: 1;
+        }
+
+        /* ========================================
+           TICKET LIST
+           ======================================== */
+        .ticket-section {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-header .filter-tabs {
+            display: flex;
+            gap: 4px;
+            background: #f3f4f6;
+            padding: 3px;
+            border-radius: var(--radius-sm);
+        }
+
+        .filter-tab {
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            color: var(--text-secondary);
+        }
+
+        .filter-tab.active {
+            background: #fff;
+            color: var(--text-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filter-tab:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        /* Ticket Row */
+        .ticket-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ticket-row {
+            display: grid;
+            grid-template-columns: 44px 1fr 120px 100px 90px 80px;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .ticket-row:hover {
+            background: #f8fafc;
+        }
+
+        .ticket-row.active {
+            background: #eff6ff;
+        }
+
+        .ticket-row .ticket-num {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .ticket-row .ticket-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .ticket-row .ticket-subject {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ticket-row .ticket-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .ticket-row .ticket-airline {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .ticket-row .ticket-amount {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .ticket-row .ticket-amount.refund { color: var(--accent-green); }
+        .ticket-row .ticket-amount.escalated { color: var(--accent-red); }
+        .ticket-row .ticket-amount.voucher { color: var(--accent-blue); }
+
+        .ticket-row .ticket-time {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Status Badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-badge.resolved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.escalated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.voucher {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* ========================================
+           RIGHT PANEL
+           ======================================== */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .stat-card.green { background: var(--stat-green); }
+        .stat-card.blue { background: var(--stat-blue); }
+        .stat-card.coral { background: var(--stat-coral); }
+        .stat-card.purple { background: var(--stat-purple); }
+
+        .stat-card .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: rgba(255,255,255,0.6);
+        }
+
+        .stat-card .stat-info .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .stat-card .stat-info .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Audit Trail */
+        .audit-trail-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            flex: 1;
+        }
+
+        .audit-trail-card .trail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .audit-trail-card .trail-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .trail-item {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+            animation: fadeSlideIn 0.3s ease forwards;
+        }
+
+        .trail-item:last-child {
+            border-bottom: none;
+        }
+
+        .trail-item .trail-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            min-width: 42px;
+            font-weight: 500;
+            padding-top: 2px;
+        }
+
+        .trail-item .trail-content {
+            flex: 1;
+        }
+
+        .trail-item .trail-content .trail-title {
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .trail-item .trail-content .trail-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .trail-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .trail-dot.green { background: var(--accent-green); }
+        .trail-dot.blue { background: var(--accent-blue); }
+        .trail-dot.amber { background: var(--accent-amber); }
+        .trail-dot.red { background: var(--accent-red); }
+
+        /* ========================================
+           TICKET DETAIL MODAL
+           ======================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            width: 760px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 28px 32px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-header .modal-title-group h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .modal-header .modal-title-group .modal-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border-light);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: #f3f4f6;
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .modal-body {
+            padding: 24px 32px 32px;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section h3 {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .detail-section .detail-text {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        /* Facts Grid */
+        .facts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .fact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+
+        .fact-item .fact-icon {
+            font-size: 14px;
+        }
+
+        /* Refund Breakdown */
+        .refund-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .refund-item {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .refund-item .refund-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .refund-item .refund-value {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .refund-item .refund-value.green { color: var(--accent-green); }
+        .refund-item .refund-value.blue { color: var(--accent-blue); }
+        .refund-item .refund-value.red { color: var(--accent-red); }
+
+        /* Reasoning Box */
+        .reasoning-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #0c4a6e;
+            position: relative;
+        }
+
+        .reasoning-box::before {
+            content: '🧠';
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            font-size: 20px;
+            background: #e0f2fe;
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* Action Buttons */
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+            margin-top: 24px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn.primary {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
+        .action-btn.primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.danger {
+            background: var(--accent-red);
+            color: #fff;
+        }
+
+        .action-btn.danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .action-btn.secondary {
+            background: #f3f4f6;
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .action-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* ========================================
+           ANIMATIONS
+           ======================================== */
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ticket-row {
+            animation: fadeSlideIn 0.3s ease forwards;
+        }
+
+        .ticket-row:nth-child(1) { animation-delay: 0s; }
+        .ticket-row:nth-child(2) { animation-delay: 0.05s; }
+        .ticket-row:nth-child(3) { animation-delay: 0.1s; }
+        .ticket-row:nth-child(4) { animation-delay: 0.15s; }
+        .ticket-row:nth-child(5) { animation-delay: 0.2s; }
+        .ticket-row:nth-child(6) { animation-delay: 0.25s; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="logo-icon">✈️</div>
+            <div class="brand-text">
+                <h2>CaseClose</h2>
+                <span>AI Operations Agent</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-item active" id="nav-dashboard" onclick="showView('dashboard')">
+                <span class="nav-icon">📊</span> Dashboard
+            </a>
+            <a class="nav-item" id="nav-tickets" onclick="showView('tickets')">
+                <span class="nav-icon">📥</span> All Tickets
+                <span class="badge">6</span>
+            </a>
+            <a class="nav-item" id="nav-escalations" onclick="showView('escalations')">
+                <span class="nav-icon">🚨</span> Escalations
+                <span class="badge">2</span>
+            </a>
+            <a class="nav-item" id="nav-resolved" onclick="showView('resolved')">
+                <span class="nav-icon">✅</span> Resolved
+            </a>
+            <a class="nav-item" onclick="void(0)">
+                <span class="nav-icon">📈</span> Analytics
+            </a>
+            <a class="nav-item" onclick="void(0)">
+                <span class="nav-icon">⚙️</span> Settings
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            Version 1.0.0 — ReAct Agent
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search tickets, bookings, passengers..." id="searchInput" onkeyup="filterTickets()">
+            </div>
+            <div class="top-bar-right">
+                <div class="icon-btn">💬</div>
+                <div class="icon-btn">
+                    🔔
+                    <span class="notif-dot"></span>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">OA</div>
+                    <span class="user-name">Ops Agent ▾</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h1>Welcome back, Operator!</h1>
+                <p>CaseClose has processed 6 tickets today. 4 were resolved autonomously and 2 require your review.</p>
+                <button class="banner-btn" onclick="showView('escalations')">
+                    🚨 Review Escalations
+                </button>
+            </div>
+            <div class="banner-illustration">🤖</div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Left: Ticket List -->
+            <div class="ticket-section">
+                <div class="section-header">
+                    <h2>Processed Tickets</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+                        <button class="filter-tab" onclick="setFilter('resolved', this)">Resolved</button>
+                        <button class="filter-tab" onclick="setFilter('escalated', this)">Escalated</button>
+                    </div>
+                </div>
+                <div class="ticket-list" id="ticketList">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- Right: Stats + Trail -->
+            <div class="right-panel">
+                <div class="stat-card green">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <div class="stat-value">$562</div>
+                        <div class="stat-label">Business Cost Saved</div>
+                    </div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-value">04</div>
+                        <div class="stat-label">Auto-Resolved</div>
+                    </div>
+                </div>
+                <div class="stat-card coral">
+                    <div class="stat-icon">🚨</div>
+                    <div class="stat-info">
+                        <div class="stat-value">02</div>
+                        <div class="stat-label">Escalations Pending</div>
+                    </div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <div class="stat-value">45s</div>
+                        <div class="stat-label">Avg. Resolution Time</div>
+                    </div>
+                </div>
+
+                <!-- Audit Trail -->
+                <div class="audit-trail-card">
+                    <div class="trail-header">
+                        <h3>AI Audit Trail</h3>
+                        <span style="font-size:12px; color: var(--text-muted);">Today</span>
+                    </div>
+                    <div class="trail-item">
+                        <span class="trail-time">11:52</span>
+                        <span class="trail-dot green"></span>
+                        <div class="trail-content">
+                            <div class="trail-title">TKT-005 Resolved — $70 Voucher</div>
+                            <div class="trail-desc">Delay compensation issued</div>
+                        </div>
+                    </div>
+                    <div class="trail-item">
+                        <span class="trail-time">11:48</span>
+                        <span class="trail-dot red"></span>
+                        <div class="trail-content">
+                            <div class="trail-title">TKT-004 Escalated — $960 Refund</div>
+                            <div class="trail-desc">Exceeds $500 auto-approve limit</div>
+                        </div>
+                    </div>
+                    <div class="trail-item">
+                        <span class="trail-time">10:42</span>
+                        <span class="trail-dot blue"></span>
+                        <div class="trail-content">
+                            <div class="trail-title">TKT-002 Voucher — Saved $90</div>
+                            <div class="trail-desc">Tradeoff: voucher > cash for business</div>
+                        </div>
+                    </div>
+                    <div class="trail-item">
+                        <span class="trail-time">10:14</span>
+                        <span class="trail-dot green"></span>
+                        <div class="trail-content">
+                            <div class="trail-title">TKT-003 Refund — $380 Cash</div>
+                            <div class="trail-desc">Itinerary conflict detected</div>
+                        </div>
+                    </div>
+                    <div class="trail-item">
+                        <span class="trail-time">09:14</span>
+                        <span class="trail-dot blue"></span>
+                        <div class="trail-content">
+                            <div class="trail-title">TKT-001 Voucher — $320</div>
+                            <div class="trail-desc">Airline cancellation resolved</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modalTitle"></h2>
+                    <span class="modal-subtitle" id="modalSubtitle"></span>
+                </div>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // ===================================================
+        // EMBEDDED DATA (from case_logs and tickets.json)
+        // ===================================================
+        const TICKETS = [
+            {
+                id: "TKT-001",
+                subject: "Flight cancelled — need refund",
+                customer: "Sarah Mitchell",
+                airline: "SkyWest Airlines",
+                channel: "email",
+                submitted: "2026-07-03T09:14:00",
+                body: "Hi, I just received a notification that my flight SW-1847 from Los Angeles to New York on July 15th has been cancelled by the airline. This is really frustrating as I have important meetings scheduled. I need a full refund for this booking. My booking reference is BKG-1001.",
+                audit: {
+                    issue_type: "airline_cancellation",
+                    facts: ["Booking ID: BKG-1001", "Flight SW-1847 cancelled", "Hotel at Grand Central Hotel, NYC"],
+                    refund: { cash: 320, voucher: 320, cost_cash: 320, cost_voucher: 128, exceeds: false },
+                    reasoning: "Voucher saves business $192 ($320 vs $128 cost) while giving customer $320 value. Customer tone is moderately frustrated but cooperative. Choosing voucher.",
+                    decision: "RESOLVED_VOUCHER",
+                    policy: "SkyWest Policy §3.1: Full refund guaranteed for all airline-initiated cancellations regardless of fare class."
+                }
+            },
+            {
+                id: "TKT-002",
+                subject: "Need to cancel my upcoming trip",
+                customer: "James Rodriguez",
+                airline: "SkyWest Airlines",
+                channel: "web_form",
+                submitted: "2026-07-03T10:42:00",
+                body: "Hello, I need to cancel my upcoming flight SW-2291 from San Francisco to Chicago on July 22nd. Something urgent came up at work. My booking reference is BKG-1002 and I'm in premium economy. I paid $450 total.",
+                audit: {
+                    issue_type: "customer_cancellation",
+                    facts: ["Booking ID: BKG-1002", "Flight: SW-2291", "Fare Class: Premium Economy", "Total Paid: $450"],
+                    refund: { cash: 270, voucher: 450, cost_cash: 270, cost_voucher: 180, exceeds: false },
+                    reasoning: "Voucher saves business $90 ($270 vs $180 cost) while giving customer $180 more value ($450 vs $270). Customer tone is cooperative. Choosing voucher.",
+                    decision: "RESOLVED_VOUCHER",
+                    policy: "SkyWest Policy §4.2: Premium Economy customer-initiated cancellations are eligible for a 60% cash refund or a 100% travel voucher."
+                }
+            },
+            {
+                id: "TKT-003",
+                subject: "FLIGHT RESCHEDULED — hotel dates don't match!",
+                customer: "Emily Chen",
+                airline: "Pacific Air",
+                channel: "email",
+                submitted: "2026-07-03T07:28:00",
+                body: "My Pacific Air flight PA-0455 from Seattle to Los Angeles has been rescheduled from July 10th to July 11th! I have a hotel booked at Sunset Beach Resort starting July 10th. I'm losing an entire night at $220/night. Booking reference is BKG-1003.",
+                audit: {
+                    issue_type: "schedule_change",
+                    facts: ["Flight PA-0455 rescheduled Jul 10→11", "Hotel at Sunset Beach Resort", "Lost 1 hotel night ($220)"],
+                    refund: { cash: 380, voucher: 380, cost_cash: 380, cost_voucher: 152, exceeds: false },
+                    reasoning: "Customer's flight was rescheduled causing hotel date mismatch. Itinerary conflict detected. Cash refund of $380 provided as goodwill.",
+                    decision: "RESOLVED_REFUND",
+                    policy: "Pacific Air Policy §6.1: Full refund or complimentary rebooking for airline-initiated schedule changes affecting departure by 2+ hours."
+                }
+            },
+            {
+                id: "TKT-004",
+                subject: "URGENT — Stranded at JFK, missed connection",
+                customer: "Michael Thompson",
+                airline: "Atlantic Airways",
+                channel: "phone",
+                submitted: "2026-07-03T01:15:00",
+                body: "URGENT — My connecting flight from Dallas to JFK was delayed THREE HOURS, and I missed my onward flight to London Heathrow. I'm stranded at JFK. Business class, booking BKG-1004, paid $1,200. I need IMMEDIATE rebooking or a full refund. Platinum loyalty member.",
+                audit: {
+                    issue_type: "missed_connection",
+                    facts: ["Booking ID: BKG-1004", "Flight: AA-7821", "Business Class", "Total Paid: $1,200"],
+                    refund: { cash: 960, voucher: 1200, cost_cash: 960, cost_voucher: 480, exceeds: true },
+                    reasoning: "Customer eligible for 80% cash refund or full-value voucher. However, refund ($960) exceeds $500 auto-approve threshold. Customer urgency is critical. Escalating to human operator.",
+                    decision: "ESCALATED",
+                    policy: "Atlantic Airways Policy §7.2: Business class — 80% cash refund or full-value voucher for missed connections due to airline delays."
+                }
+            },
+            {
+                id: "TKT-005",
+                subject: "Compensation for 4-hour flight delay",
+                customer: "Lisa Park",
+                airline: "SkyWest Airlines",
+                channel: "web_form",
+                submitted: "2026-07-03T11:30:00",
+                body: "My flight SW-3342 from Denver to Miami on July 18th was delayed by 4 hours. I eventually arrived but missed a dinner reservation. I feel some compensation is warranted. Booking BKG-1005, economy class.",
+                audit: {
+                    issue_type: "delay",
+                    facts: ["Booking: BKG-1005", "Flight: SW-3342", "4-hour delay", "Economy class"],
+                    refund: { cash: 0, voucher: 70, cost_cash: 0, cost_voucher: 28, exceeds: false },
+                    reasoning: "Cash refund is $0 for delays per policy. Voucher of $70 (25% of fare) issued as goodwill. Customer tone is reasonable.",
+                    decision: "RESOLVED_VOUCHER",
+                    policy: "SkyWest Policy §5.1: Economy passengers affected by delays of 3+ hours eligible for 25% travel voucher. No cash refund for delays."
+                }
+            },
+            {
+                id: "TKT-006",
+                subject: "Need to change travel dates",
+                customer: "David Kim",
+                airline: "Pacific Air",
+                channel: "email",
+                submitted: "2026-07-03T12:05:00",
+                body: "I have booking BKG-1006 for Pacific Air flight PA-1122 from Boston to San Francisco on July 25th. I need to push my trip back by about a week. Premium economy, Gold member. Can you help find available flights around July 30th-Aug 1st?",
+                audit: {
+                    issue_type: "schedule_change",
+                    facts: ["Booking: BKG-1006", "Flight: PA-1122", "Premium Economy", "Total Paid: $520"],
+                    refund: { cash: 520, voucher: 520, cost_cash: 520, cost_voucher: 208, exceeds: true },
+                    reasoning: "Customer request to change dates. Refund calculation ($520) exceeds $500 auto-approve threshold. Escalating for personalized attention given Gold loyalty tier.",
+                    decision: "ESCALATED",
+                    policy: "Pacific Air Policy §6.2: Premium Economy — full refund or priority rebooking for schedule changes."
+                }
+            }
+        ];
+
+        let currentFilter = 'all';
+
+        // ===================================================
+        // RENDER TICKET LIST
+        // ===================================================
+        function renderTickets(filter = 'all', searchTerm = '') {
+            const list = document.getElementById('ticketList');
+            let filtered = TICKETS;
+
+            if (filter === 'resolved') {
+                filtered = filtered.filter(t => t.audit.decision !== 'ESCALATED');
+            } else if (filter === 'escalated') {
+                filtered = filtered.filter(t => t.audit.decision === 'ESCALATED');
+            }
+
+            if (searchTerm) {
+                const q = searchTerm.toLowerCase();
+                filtered = filtered.filter(t =>
+                    t.id.toLowerCase().includes(q) ||
+                    t.subject.toLowerCase().includes(q) ||
+                    t.customer.toLowerCase().includes(q) ||
+                    t.airline.toLowerCase().includes(q)
+                );
+            }
+
+            list.innerHTML = filtered.map((t, i) => {
+                const d = t.audit.decision;
+                const isEscalated = d === 'ESCALATED';
+                const isRefund = d === 'RESOLVED_REFUND';
+                const amount = isEscalated
+                    ? `$${t.audit.refund.cash}`
+                    : isRefund
+                        ? `$${t.audit.refund.cash}`
+                        : `$${t.audit.refund.voucher}`;
+                const amountClass = isEscalated ? 'escalated' : isRefund ? 'refund' : 'voucher';
+
+                const badgeClass = isEscalated ? 'escalated' : isRefund ? 'resolved' : 'voucher';
+                const badgeText = isEscalated ? '🚨 Escalated' : isRefund ? '✅ Refund' : '💳 Voucher';
+
+                const issueLabels = {
+                    airline_cancellation: 'Airline Cancellation',
+                    customer_cancellation: 'Customer Cancel',
+                    schedule_change: 'Schedule Change',
+                    missed_connection: 'Missed Connection',
+                    delay: 'Flight Delay'
+                };
+
+                const time = new Date(t.submitted).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="ticket-row" onclick="openModal('${t.id}')" style="animation-delay: ${i * 0.05}s">
+                        <span class="ticket-num">${t.id.replace('TKT-', '#')}</span>
+                        <div class="ticket-info">
+                            <span class="ticket-subject">${t.subject}</span>
+                            <span class="ticket-meta">${t.customer} · ${issueLabels[t.audit.issue_type] || t.audit.issue_type}</span>
+                        </div>
+                        <span class="ticket-airline">${t.airline}</span>
+                        <span class="ticket-amount ${amountClass}">${amount}</span>
+                        <span class="status-badge ${badgeClass}">${badgeText}</span>
+                        <span class="ticket-time">${time}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===================================================
+        // FILTER
+        // ===================================================
+        function setFilter(filter, btn) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderTickets(filter, document.getElementById('searchInput').value);
+        }
+
+        function filterTickets() {
+            renderTickets(currentFilter, document.getElementById('searchInput').value);
+        }
+
+        // ===================================================
+        // SIDEBAR NAVIGATION
+        // ===================================================
+        function showView(view) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            if (view === 'dashboard') {
+                document.getElementById('nav-dashboard').classList.add('active');
+                currentFilter = 'all';
+            } else if (view === 'tickets') {
+                document.getElementById('nav-tickets').classList.add('active');
+                currentFilter = 'all';
+            } else if (view === 'escalations') {
+                document.getElementById('nav-escalations').classList.add('active');
+                currentFilter = 'escalated';
+            } else if (view === 'resolved') {
+                document.getElementById('nav-resolved').classList.add('active');
+                currentFilter = 'resolved';
+            }
+
+            // Reset filter tab visuals
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            const tabs = document.querySelectorAll('.filter-tab');
+            if (currentFilter === 'all') tabs[0].classList.add('active');
+            else if (currentFilter === 'resolved') tabs[1].classList.add('active');
+            else if (currentFilter === 'escalated') tabs[2].classList.add('active');
+
+            renderTickets(currentFilter);
+        }
+
+        // ===================================================
+        // MODAL
+        // ===================================================
+        function openModal(ticketId) {
+            const t = TICKETS.find(x => x.id === ticketId);
+            if (!t) return;
+
+            const a = t.audit;
+            const isEscalated = a.decision === 'ESCALATED';
+
+            document.getElementById('modalTitle').textContent = `${t.id} — ${t.subject}`;
+            document.getElementById('modalSubtitle').textContent = `${t.customer} · ${t.airline} · ${t.channel}`;
+
+            const issueLabels = {
+                airline_cancellation: 'Airline Cancellation',
+                customer_cancellation: 'Customer Cancellation',
+                schedule_change: 'Schedule Change',
+                missed_connection: 'Missed Connection',
+                delay: 'Flight Delay'
+            };
+
+            const decisionBadge = isEscalated
+                ? '<span class="status-badge escalated" style="font-size:13px; padding:6px 14px;">🚨 ESCALATED — Needs Human Review</span>'
+                : a.decision === 'RESOLVED_REFUND'
+                    ? '<span class="status-badge resolved" style="font-size:13px; padding:6px 14px;">✅ RESOLVED — Cash Refund</span>'
+                    : '<span class="status-badge voucher" style="font-size:13px; padding:6px 14px;">💳 RESOLVED — Travel Voucher</span>';
+
+            let html = `
+                <div class="detail-section">
+                    <h3>Decision</h3>
+                    ${decisionBadge}
+                </div>
+
+                <div class="detail-section">
+                    <h3>Issue Classification</h3>
+                    <div class="detail-text">${issueLabels[a.issue_type]}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Customer Message</h3>
+                    <div class="detail-text">${t.body}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Facts Gathered by Agent</h3>
+                    <div class="facts-grid">
+                        ${a.facts.map(f => `<div class="fact-item"><span class="fact-icon">📋</span>${f}</div>`).join('')}
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Refund Calculation (Deterministic)</h3>
+                    <div class="refund-breakdown">
+                        <div class="refund-item">
+                            <div class="refund-label">Cash Refund</div>
+                            <div class="refund-value green">$${a.refund.cash}</div>
+                        </div>
+                        <div class="refund-item">
+                            <div class="refund-label">Voucher Value</div>
+                            <div class="refund-value blue">$${a.refund.voucher}</div>
+                        </div>
+                        <div class="refund-item">
+                            <div class="refund-label">Cost to Business (Cash)</div>
+                            <div class="refund-value">$${a.refund.cost_cash}</div>
+                        </div>
+                        <div class="refund-item">
+                            <div class="refund-label">Cost to Business (Voucher)</div>
+                            <div class="refund-value">$${a.refund.cost_voucher}</div>
+                        </div>
+                    </div>
+                    ${a.refund.exceeds ? '<div style="margin-top:10px; padding:8px 12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; font-size:12px; color:#991b1b; font-weight:600;">⚠️ Exceeds $500 Auto-Approve Threshold</div>' : ''}
+                </div>
+
+                <div class="detail-section">
+                    <h3>AI Reasoning Trace</h3>
+                    <div class="reasoning-box">${a.reasoning}</div>
+                </div>
+
+                <div class="detail-section">
+                    <h3>Policy Cited</h3>
+                    <div class="detail-text" style="font-style:italic; font-size:13px;">${a.policy}</div>
+                </div>
+            `;
+
+            if (isEscalated) {
+                html += `
+                    <div class="modal-actions">
+                        <button class="action-btn primary">✅ Approve AI Draft</button>
+                        <button class="action-btn danger">✏️ Override & Edit</button>
+                        <button class="action-btn secondary" onclick="closeModal()">Close</button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="modal-actions">
+                        <button class="action-btn primary">📄 View Full Response</button>
+                        <button class="action-btn secondary" onclick="closeModal()">Close</button>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modalBody').innerHTML = html;
+
+            const overlay = document.getElementById('modalOverlay');
+            overlay.style.display = 'flex';
+            requestAnimationFrame(() => overlay.classList.add('show'));
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const overlay = document.getElementById('modalOverlay');
+            overlay.classList.remove('show');
+            setTimeout(() => { overlay.style.display = 'none'; }, 300);
+        }
+
+        // Close on Escape
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ===================================================
+        // INIT
+        // ===================================================
+        renderTickets();
+    </script>
+</body>
+</html>

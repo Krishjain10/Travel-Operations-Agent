@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from agent.loop import process_ticket
+from agent.memory import AgentMemory
 
 
 # ---------------------------------------------------------------------------
@@ -33,6 +34,24 @@ DATA_DIR = Path(__file__).resolve().parent / "data"
 def load_tickets() -> list[dict]:
     with open(DATA_DIR / "tickets.json", "r") as f:
         return json.load(f)["tickets"]
+
+
+OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "case_logs"
+
+
+def _save_full_audit(audit: dict):
+    """
+    Save the FULL audit trace to disk, including fields that the
+    finalize_case tool doesn't capture: execution_plan, thought_trace,
+    total_tokens_used, llm_calls, self_corrections, etc.
+
+    This overwrites the minimal audit written by finalize_case.
+    """
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    ticket_id = audit.get("ticket_id", "unknown")
+    output_path = OUTPUT_DIR / f"{ticket_id}.json"
+    with open(output_path, "w") as f:
+        json.dump(audit, f, indent=2, default=str)
 
 
 # ---------------------------------------------------------------------------
@@ -109,11 +128,25 @@ Examples:
 
     results = []
     total_start = time.time()
+    memory = AgentMemory()
 
     for ticket in tickets_to_process:
         try:
-            audit = process_ticket(ticket, verbose=args.verbose)
+            # Inject cross-ticket memory context
+            memory_context = memory.get_context_block()
+            audit = process_ticket(ticket, verbose=args.verbose, memory_context=memory_context)
             results.append(audit)
+
+            # Save the FULL audit trace (with thought_trace, plan, tokens)
+            _save_full_audit(audit)
+
+            # Store resolution in memory for subsequent tickets
+            memory.store_resolution(audit)
+
+            if args.verbose and memory.pattern_alerts:
+                for alert in memory.pattern_alerts:
+                    print(f"  [MEMORY] Pattern detected: {alert}")
+
         except KeyboardInterrupt:
             print("\n\nInterrupted by user. Partial results below.")
             break

@@ -63,6 +63,19 @@ When calling finalize_case, you MUST include:
 - Be professional and empathetic in responses, but concise."""
 
 
+PLANNING_PROMPT = """Before you begin processing this ticket, output your EXECUTION PLAN.
+
+Analyze the ticket and write a brief numbered plan (3-6 steps) describing:
+1. What type of issue this appears to be (cancellation, delay, schedule change, etc.)
+2. Which tools you will call and in what order
+3. What specific data you need to gather
+4. What tradeoffs or edge cases you anticipate
+5. Under what conditions you would escalate vs. resolve autonomously
+
+Format your plan as a numbered list. Do NOT call any tools yet — just plan.
+After you output your plan, I will say "Execute your plan" and you will begin."""
+
+
 DECISION_PROMPT = """Based on everything you've gathered, make your final decision now.
 
 You must choose exactly one terminal state:

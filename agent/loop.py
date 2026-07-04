@@ -2,10 +2,18 @@
 Core ReAct loop for CaseClose.
 
 Processes a single ticket end-to-end:
-  classify → gather → compute → decide → act
+  plan → classify → gather → compute → decide → act
 
 The LLM drives tool selection. This module manages the conversation,
-dispatches tool calls, and enforces the iteration cap.
+dispatches tool calls, enforces the iteration cap, and captures
+the full reasoning trace for audit.
+
+Agent capabilities demonstrated:
+  - Autonomous planning (LLM outputs execution plan before acting)
+  - ReAct reasoning (multi-step tool selection and analysis)
+  - Self-correction (detects tool errors and adapts strategy)
+  - Memory integration (receives cross-ticket context from AgentMemory)
+  - Full audit trail (every LLM thought and tool result is captured)
 """
 
 import json
@@ -14,7 +22,7 @@ import logging
 
 from agent import llm as llm_module
 from agent.tools import TOOL_SCHEMAS, execute_tool
-from agent.prompts import SYSTEM_PROMPT
+from agent.prompts import SYSTEM_PROMPT, PLANNING_PROMPT
 
 logger = logging.getLogger("caseclose.loop")
 
@@ -24,17 +32,18 @@ logger = logging.getLogger("caseclose.loop")
 MAX_ITERATIONS = 6  # Hard cap — forced escalation if reached
 
 
-def process_ticket(ticket: dict, verbose: bool = False) -> dict:
+def process_ticket(ticket: dict, verbose: bool = False, memory_context: str = "") -> dict:
     """
     Process a single support ticket end-to-end to a terminal state.
 
-    The LLM reads the ticket, decides which tools to call and in what order,
-    reasons over the results, and finalizes the case. This function manages
-    the conversation loop and enforces the iteration cap.
+    The LLM reads the ticket, formulates a plan, decides which tools to call
+    and in what order, reasons over the results, and finalizes the case.
+    This function manages the conversation loop and enforces the iteration cap.
 
     Args:
-        ticket:  A ticket record from tickets.json
-        verbose: If True, print detailed reasoning to stdout
+        ticket:          A ticket record from tickets.json
+        verbose:         If True, print detailed reasoning to stdout
+        memory_context:  Context block from AgentMemory (prior resolutions)
 
     Returns:
         Audit trace dict (also written to disk by finalize_case)
@@ -47,9 +56,14 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
         print(f"  Processing: {ticket_id} - {ticket['subject']}")
         print(f"{'='*70}")
 
+    # Build system prompt with optional memory context
+    full_system_prompt = SYSTEM_PROMPT
+    if memory_context:
+        full_system_prompt += "\n" + memory_context
+
     # Initialize conversation with system prompt + the raw ticket
     messages = [
-        llm_module.system_message(SYSTEM_PROMPT),
+        llm_module.system_message(full_system_prompt),
         llm_module.user_message(
             f"Process this support ticket to a terminal state.\n\n"
             f"**Ticket ID:** {ticket['id']}\n"
@@ -64,6 +78,8 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
     audit = {
         "ticket_id": ticket_id,
         "issue_type": None,
+        "execution_plan": None,          # NEW: agent's plan before acting
+        "thought_trace": [],             # NEW: full reasoning at every step
         "facts_gathered": [],
         "refund_calculation": None,
         "reasoning": None,
@@ -72,10 +88,48 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
         "policy_cited": None,
         "iterations_used": 0,
         "tools_called": [],
+        "total_tokens_used": 0,          # NEW: cumulative token usage
+        "llm_calls": 0,                  # NEW: number of LLM round-trips
+        "self_corrections": 0,           # NEW: times agent adapted to errors
+        "memory_context_provided": bool(memory_context),  # NEW
         "elapsed_seconds": 0,
     }
 
-    # --- Main ReAct loop ---
+    # -----------------------------------------------------------------------
+    # PLANNING STEP — Agent articulates its strategy before acting
+    # -----------------------------------------------------------------------
+    if verbose:
+        print(f"\n--- Planning Phase ---")
+
+    plan_messages = messages.copy()
+    plan_messages.append(llm_module.user_message(PLANNING_PROMPT))
+
+    plan_response = llm_module.chat(
+        messages=plan_messages,
+        tools=None,  # No tools during planning — pure reasoning
+        temperature=0.3,
+    )
+
+    audit["llm_calls"] += 1
+    if plan_response.get("usage"):
+        audit["total_tokens_used"] += plan_response["usage"]["total_tokens"]
+
+    if plan_response["content"]:
+        audit["execution_plan"] = plan_response["content"]
+        audit["thought_trace"].append({
+            "iteration": 0,
+            "phase": "PLANNING",
+            "type": "reasoning",
+            "content": plan_response["content"],
+        })
+
+        if verbose:
+            plan_preview = plan_response["content"][:300]
+            print(f"  Agent plan: {plan_preview}...")
+
+    # -----------------------------------------------------------------------
+    # MAIN ReAct LOOP
+    # -----------------------------------------------------------------------
     for iteration in range(1, MAX_ITERATIONS + 1):
         audit["iterations_used"] = iteration
 
@@ -89,10 +143,13 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
             tool_choice="auto",
         )
 
+        audit["llm_calls"] += 1
+        if response.get("usage"):
+            audit["total_tokens_used"] += response["usage"]["total_tokens"]
+
         # --- Handle tool calls ---
         if response["tool_calls"]:
             # Append the assistant message (with tool_calls) to conversation
-            # We need the raw message object for proper conversation threading
             raw_msg = response["raw_message"]
             messages.append(_serialize_assistant_message(raw_msg))
 
@@ -101,6 +158,15 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
 
             if verbose:
                 print(f"  Tools called: {', '.join(tool_names_this_turn)}")
+
+            # Capture any reasoning the LLM included alongside tool calls
+            if response.get("content"):
+                audit["thought_trace"].append({
+                    "iteration": iteration,
+                    "phase": "REASONING",
+                    "type": "thought",
+                    "content": response["content"],
+                })
 
             # Execute each tool call and append results
             for tc in response["tool_calls"]:
@@ -114,20 +180,63 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
                 # Execute the tool
                 result = execute_tool(tool_name, tool_args)
 
+                # -------------------------------------------------------
+                # SELF-CORRECTION: Detect tool errors and inject guidance
+                # -------------------------------------------------------
+                if "error" in result:
+                    audit["self_corrections"] += 1
+                    error_guidance = (
+                        f"[SYSTEM] Tool '{tool_name}' returned an error: "
+                        f"{result['error']}. Consider an alternative approach, "
+                        f"use different parameters, or escalate if the required "
+                        f"data is unavailable."
+                    )
+                    if verbose:
+                        print(f"    !! Error detected — injecting self-correction guidance")
+
+                    audit["thought_trace"].append({
+                        "iteration": iteration,
+                        "phase": "SELF_CORRECTION",
+                        "type": "error_recovery",
+                        "tool": tool_name,
+                        "error": result["error"],
+                        "guidance": error_guidance,
+                    })
+
                 # Append tool result to conversation
                 messages.append(
                     llm_module.tool_result_message(tool_id, json.dumps(result, default=str))
                 )
+
+                # If there was an error, also inject the guidance as a system hint
+                if "error" in result:
+                    messages.append(
+                        llm_module.user_message(
+                            f"[SYSTEM] The tool '{tool_name}' failed. "
+                            f"Error: {result['error']}. "
+                            f"Adapt your approach — try different parameters, "
+                            f"use an alternative tool, or escalate if this data "
+                            f"is genuinely unavailable."
+                        )
+                    )
 
                 # Track in audit
                 audit["tools_called"].append({
                     "tool": tool_name,
                     "args_summary": _truncate_args(tool_args),
                     "iteration": iteration,
+                    "success": "error" not in result,
                 })
-                audit["facts_gathered"].append(
-                    f"[Iteration {iteration}] {tool_name}: {_summarize_result(tool_name, result)}"
-                )
+
+                # Record tool result in thought trace
+                audit["thought_trace"].append({
+                    "iteration": iteration,
+                    "phase": "TOOL_EXECUTION",
+                    "type": "tool_result",
+                    "tool": tool_name,
+                    "result_summary": _summarize_result(tool_name, result),
+                    "success": "error" not in result,
+                })
 
                 # Capture specific results for the audit trace
                 _update_audit_from_tool(audit, tool_name, tool_args, result)
@@ -151,6 +260,14 @@ def process_ticket(ticket: dict, verbose: bool = False) -> dict:
         # --- Handle text response (reasoning step, no tool calls) ---
         elif response["content"]:
             messages.append(llm_module.assistant_message(response["content"]))
+
+            # Capture full reasoning in the thought trace
+            audit["thought_trace"].append({
+                "iteration": iteration,
+                "phase": "REASONING",
+                "type": "analysis",
+                "content": response["content"],
+            })
 
             if verbose:
                 reasoning_preview = response["content"][:300]
@@ -214,6 +331,14 @@ def _force_escalate(ticket: dict, audit: dict, messages: list) -> dict:
 
     audit["decision"] = "ESCALATED"
     audit["reasoning"] = f"Forced escalation at iteration cap ({MAX_ITERATIONS})"
+
+    audit["thought_trace"].append({
+        "iteration": audit["iterations_used"],
+        "phase": "FORCED_ESCALATION",
+        "type": "safety",
+        "content": f"Agent reached {MAX_ITERATIONS}-iteration cap. Force-escalating to human.",
+    })
+
     return audit
 
 
@@ -336,6 +461,10 @@ def _print_summary(audit: dict):
     print(f"  Decision:   {audit.get('decision', '?')}")
     print(f"  Iterations: {audit['iterations_used']}")
     print(f"  Time:       {audit.get('elapsed_seconds', '?')}s")
+    print(f"  LLM Calls:  {audit.get('llm_calls', '?')}")
+    print(f"  Tokens:     {audit.get('total_tokens_used', '?')}")
+    if audit.get("self_corrections"):
+        print(f"  Self-Corrections: {audit['self_corrections']}")
     if audit.get("refund_calculation"):
         rc = audit["refund_calculation"]
         print(f"  Cash:       ${rc.get('cash_refund_amount', '?')}")
