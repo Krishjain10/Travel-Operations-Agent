@@ -4,788 +4,910 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CaseClose — Agent Command Center</title>
-    <meta name="description" content="CaseClose AI Agent — autonomous travel ticket resolution with ReAct reasoning">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="description" content="CaseClose: Autonomous AI agent for travel ticket resolution with ReAct reasoning">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* ═══════════════════════════════════════
+           RESET & DESIGN TOKENS
+           ═══════════════════════════════════════ */
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --sidebar-bg: #1a1f36;
-            --sidebar-hover: #252b48;
-            --sidebar-active: #3b82f6;
-            --page-bg: #f5f0e8;
-            --card-bg: #ffffff;
-            --card-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            --card-shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
-            --text-primary: #1a1f36;
-            --text-secondary: #6b7280;
-            --text-muted: #9ca3af;
-            --accent-blue: #3b82f6;
-            --accent-green: #10b981;
-            --accent-amber: #f59e0b;
-            --accent-red: #ef4444;
-            --accent-purple: #8b5cf6;
-            --accent-cyan: #06b6d4;
-            --border-light: #e5e7eb;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Surface system — deep layered dark */
+            --bg-0: #07080d;
+            --bg-1: #0c0e16;
+            --bg-2: #12151f;
+            --bg-3: #181c28;
+            --bg-4: #1e2233;
+            --bg-hover: #232840;
+
+            /* Borders */
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-default: rgba(255,255,255,0.07);
+            --border-strong: rgba(255,255,255,0.12);
+            --border-active: rgba(99,140,255,0.35);
+
+            /* Text */
+            --text-0: #f4f5f7;
+            --text-1: #c8ccd6;
+            --text-2: #8b90a0;
+            --text-3: #555a6e;
+
+            /* Accent palette */
+            --blue: #638cff;
+            --blue-dim: rgba(99,140,255,0.12);
+            --cyan: #3dd8e0;
+            --cyan-dim: rgba(61,216,224,0.10);
+            --green: #34d399;
+            --green-dim: rgba(52,211,153,0.10);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251,191,36,0.10);
+            --red: #f87171;
+            --red-dim: rgba(248,113,113,0.10);
+            --purple: #a78bfa;
+            --purple-dim: rgba(167,139,250,0.10);
+            --pink: #f472b6;
+
+            /* Typography */
+            --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+            /* Radius */
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 14px;
+            --r-xl: 20px;
+
+            /* Transitions */
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        html, body { height: 100%; }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--page-bg);
-            color: var(--text-primary);
+            font-family: var(--sans);
+            background: var(--bg-0);
+            color: var(--text-0);
             display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ══════════════════════════════════════
-           SIDEBAR
-           ══════════════════════════════════════ */
-        .sidebar {
-            width: 260px; min-height: 100vh;
-            background: var(--sidebar-bg);
-            padding: 24px 14px;
+        /* ═══════════════════════════════════════
+           LEFT RAIL
+           ═══════════════════════════════════════ */
+        .rail {
+            width: 300px; min-width: 300px;
+            height: 100vh;
+            background: var(--bg-1);
+            border-right: 1px solid var(--border-default);
             display: flex; flex-direction: column;
-            position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
         }
 
-        .sidebar-brand {
+        /* Brand */
+        .brand {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid var(--border-subtle);
             display: flex; align-items: center; gap: 12px;
-            padding: 0 12px; margin-bottom: 32px;
         }
 
-        .sidebar-brand .logo-icon {
-            width: 38px; height: 38px;
-            background: linear-gradient(135deg, #3b82f6, #06b6d4);
-            border-radius: var(--radius-sm);
+        .brand-mark {
+            width: 34px; height: 34px;
+            border-radius: var(--r-md);
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 100%);
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 800; color: #fff;
+            font-weight: 900; font-size: 12px; color: #000; letter-spacing: -0.5px;
         }
 
-        .sidebar-brand .brand-text { color: #fff; }
-        .sidebar-brand .brand-text h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
-        .sidebar-brand .brand-text span { font-size: 11px; color: #94a3b8; }
-
-        .sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 11px 14px; border-radius: var(--radius-sm);
-            color: #94a3b8; font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: var(--transition);
-            text-decoration: none;
+        .brand h1 {
+            font-size: 15px; font-weight: 800; letter-spacing: -0.4px;
         }
 
-        .nav-item:hover { background: var(--sidebar-hover); color: #e2e8f0; }
-        .nav-item.active { background: var(--sidebar-active); color: #fff; }
-        .nav-item .nav-icon { font-size: 16px; width: 22px; text-align: center; }
-
-        .nav-item .badge {
-            margin-left: auto; background: var(--accent-red); color: #fff;
-            font-size: 11px; font-weight: 600; padding: 2px 8px;
-            border-radius: 20px; min-width: 22px; text-align: center;
+        .brand p {
+            font-size: 10px; color: var(--text-3); font-weight: 500;
+            text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;
         }
 
-        /* Memory Section in Sidebar */
-        .sidebar-memory {
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding: 16px 12px 0;
-            margin-top: 8px;
-        }
-
-        .sidebar-memory h4 {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; color: #a78bfa; margin-bottom: 10px;
-        }
-
-        .mem-item {
-            font-size: 11px; color: #94a3b8; padding: 3px 0;
-            display: flex; align-items: center; gap: 6px;
-        }
-
-        .mem-alert {
-            margin-top: 8px; padding: 7px 10px;
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-            border-radius: 6px; font-size: 10px; color: #fbbf24; line-height: 1.4;
-        }
-
-        .sidebar-footer {
-            padding: 12px; border-top: 1px solid rgba(255,255,255,0.08);
-            color: #475569; font-size: 11px; margin-top: 12px;
-        }
-
-        /* ══════════════════════════════════════
-           MAIN CONTENT
-           ══════════════════════════════════════ */
-        .main-content {
-            margin-left: 260px; flex: 1;
-            padding: 24px 28px; min-height: 100vh;
-        }
-
-        /* Stats Row */
-        .stats-row {
+        /* Metrics strip */
+        .metrics {
             display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 16px; margin-bottom: 24px;
+            gap: 1px; background: var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        .stat-card {
-            padding: 18px 20px; border-radius: var(--radius-md);
-            display: flex; align-items: center; gap: 14px;
-            box-shadow: var(--card-shadow); transition: var(--transition);
+        .m-cell {
+            background: var(--bg-1);
+            padding: 12px 6px; text-align: center;
         }
 
-        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--card-shadow-hover); }
-
-        .stat-card.green { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
-        .stat-card.blue { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-        .stat-card.coral { background: linear-gradient(135deg, #fee2e2, #fecaca); }
-        .stat-card.purple { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
-
-        .stat-card .stat-icon {
-            width: 42px; height: 42px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; background: rgba(255,255,255,0.6);
+        .m-cell .m-num {
+            font-family: var(--mono);
+            font-size: 18px; font-weight: 700; line-height: 1;
         }
 
-        .stat-card .stat-value { font-size: 24px; font-weight: 800; line-height: 1.1; }
-        .stat-card .stat-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
-
-        /* Two-Column Layout */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 20px;
+        .m-cell .m-lbl {
+            font-size: 8px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-3); margin-top: 4px;
         }
 
-        /* Ticket Section */
-        .ticket-section {
-            background: var(--card-bg); border-radius: var(--radius-lg);
-            padding: 20px; box-shadow: var(--card-shadow);
+        .m-cell.c-green .m-num { color: var(--green); }
+        .m-cell.c-red .m-num { color: var(--red); }
+        .m-cell.c-blue .m-num { color: var(--blue); }
+        .m-cell.c-amber .m-num { color: var(--amber); }
+
+        /* Queue */
+        .queue-head {
+            padding: 14px 20px 10px;
+            display: flex; align-items: center; justify-content: space-between;
         }
 
-        .section-header {
-            display: flex; align-items: center;
-            justify-content: space-between; margin-bottom: 16px;
+        .queue-head span {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            color: var(--text-3);
         }
 
-        .section-header h2 { font-size: 16px; font-weight: 700; }
+        .pill-group { display: flex; gap: 2px; }
 
-        .filter-tabs { display: flex; gap: 4px; background: #f3f4f6; padding: 3px; border-radius: var(--radius-sm); }
-
-        .filter-tab {
-            padding: 5px 12px; font-size: 12px; font-weight: 500;
-            border-radius: 6px; cursor: pointer; transition: var(--transition);
-            border: none; background: transparent; font-family: inherit; color: var(--text-secondary);
+        .pill {
+            padding: 3px 9px; font-size: 10px; font-weight: 600;
+            border-radius: 20px; cursor: pointer;
+            background: transparent; border: 1px solid var(--border-default);
+            color: var(--text-2); font-family: var(--sans);
+            transition: all 0.15s var(--ease);
         }
 
-        .filter-tab.active { background: #fff; color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .filter-tab:hover:not(.active) { color: var(--text-primary); }
-
-        /* Ticket Row */
-        .ticket-list { display: flex; flex-direction: column; gap: 2px; }
-
-        .ticket-row {
-            display: grid;
-            grid-template-columns: 40px 1fr 100px 80px 72px;
-            align-items: center; gap: 10px;
-            padding: 12px 10px; border-radius: var(--radius-sm);
-            cursor: pointer; transition: var(--transition);
+        .pill.on {
+            background: var(--blue-dim);
+            border-color: var(--border-active);
+            color: var(--blue);
         }
 
-        .ticket-row:hover { background: #f8fafc; }
-        .ticket-row.active { background: #eff6ff; }
+        .pill:hover:not(.on) { border-color: var(--border-strong); color: var(--text-1); }
 
-        .ticket-row .t-num { font-size: 12px; font-weight: 700; color: var(--text-muted); }
-        .ticket-row .t-info { min-width: 0; }
-        .ticket-row .t-subject { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ticket-row .t-meta { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-        .ticket-row .t-amount { font-size: 13px; font-weight: 700; text-align: right; }
-        .ticket-row .t-amount.green { color: var(--accent-green); }
-        .ticket-row .t-amount.blue { color: var(--accent-blue); }
-        .ticket-row .t-amount.red { color: var(--accent-red); }
-
-        .status-badge {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 4px 10px; border-radius: 20px;
-            font-size: 10px; font-weight: 600; white-space: nowrap; justify-content: center;
+        .queue {
+            flex: 1; overflow-y: auto;
+            padding: 2px 8px 8px;
         }
 
-        .status-badge.resolved { background: #d1fae5; color: #065f46; }
-        .status-badge.escalated { background: #fee2e2; color: #991b1b; }
-        .status-badge.voucher { background: #dbeafe; color: #1e40af; }
-
-        .ticket-row .t-iters { font-size: 11px; color: var(--text-muted); text-align: center; }
-
-        /* Right Panel */
-        .right-panel { display: flex; flex-direction: column; gap: 16px; }
-
-        /* Agent Detail Panel */
-        .detail-panel {
-            background: var(--card-bg); border-radius: var(--radius-lg);
-            padding: 20px; box-shadow: var(--card-shadow);
-            flex: 1; overflow-y: auto; max-height: calc(100vh - 160px);
-        }
-
-        .detail-panel .dp-empty {
-            text-align: center; padding: 60px 20px;
-            color: var(--text-muted); font-size: 13px;
-        }
-
-        .detail-panel .dp-empty .dp-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.3; }
-
-        /* Detail Header */
-        .dp-header { margin-bottom: 18px; }
-        .dp-header h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-        .dp-header .dp-sub { font-size: 12px; color: var(--text-muted); }
-
-        /* Agent Stats Row */
-        .agent-stats {
-            display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 8px; margin-bottom: 16px;
-        }
-
-        .a-stat {
-            text-align: center; padding: 10px 6px;
-            background: #f8fafc; border-radius: var(--radius-sm);
-            border: 1px solid var(--border-light);
-        }
-
-        .a-stat .as-val { font-size: 18px; font-weight: 800; }
-        .a-stat .as-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 2px; }
-
-        /* ReAct Pipeline */
-        .react-bar {
-            display: flex; align-items: center; gap: 0;
-            background: #f8fafc; border: 1px solid var(--border-light);
-            border-radius: var(--radius-sm); padding: 3px; margin-bottom: 16px; overflow: hidden;
-        }
-
-        .rp-step {
-            flex: 1; text-align: center; padding: 8px 4px;
-            border-radius: 6px; position: relative;
-        }
-
-        .rp-step:not(:last-child)::after {
-            content: '\2192'; position: absolute; right: -6px; top: 50%;
-            transform: translateY(-50%); color: #d1d5db; font-size: 11px; z-index: 1;
-        }
-
-        .rp-step .rp-icon { font-size: 14px; }
-        .rp-step .rp-name { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-top: 2px; }
-        .rp-step.done .rp-name { color: var(--accent-blue); }
-        .rp-step.done.plan .rp-name { color: var(--accent-amber); }
-        .rp-step.done.compute .rp-name { color: var(--accent-cyan); }
-        .rp-step.done.decide .rp-name { color: var(--accent-purple); }
-        .rp-step.done.act .rp-name { color: var(--accent-green); }
-        .rp-step.done.act-esc .rp-name { color: var(--accent-red); }
-
-        /* Detail Sections */
-        .d-section { margin-bottom: 14px; }
-
-        .d-section .ds-label {
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px;
-            display: flex; align-items: center; gap: 6px;
-        }
-
-        .ds-tag {
-            font-size: 8px; font-weight: 700; padding: 2px 6px;
-            border-radius: 3px; text-transform: uppercase;
-        }
-
-        .ds-tag.amber { background: #fef3c7; color: #92400e; }
-        .ds-tag.blue { background: #dbeafe; color: #1e40af; }
-        .ds-tag.cyan { background: #cffafe; color: #0e7490; }
-        .ds-tag.purple { background: #ede9fe; color: #6d28d9; }
-        .ds-tag.green { background: #d1fae5; color: #065f46; }
-        .ds-tag.red { background: #fee2e2; color: #991b1b; }
-
-        /* Plan Box */
-        .plan-box {
-            background: #fefce8; border: 1px solid #fde68a;
-            border-radius: var(--radius-sm); padding: 12px 14px;
-            font-size: 12px; line-height: 1.7; color: #713f12;
-            white-space: pre-wrap; max-height: 160px; overflow-y: auto;
-        }
-
-        /* Tool Log */
-        .tool-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 6px 0; font-size: 12px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .tool-item:last-child { border-bottom: none; }
-
-        .tool-item .ti-dot {
-            width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
-        }
-
-        .tool-item .ti-dot.ok { background: var(--accent-green); }
-        .tool-item .ti-dot.err { background: var(--accent-red); }
-
-        .tool-item .ti-name {
-            font-weight: 600; font-size: 12px;
-            color: var(--text-primary); white-space: nowrap;
-        }
-
-        .tool-item .ti-result {
-            flex: 1; font-size: 11px; color: var(--text-muted);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .tool-item .ti-iter { font-size: 10px; color: var(--text-muted); white-space: nowrap; }
-
-        /* Refund Grid */
-        .refund-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-        }
-
-        .rf-cell {
-            padding: 10px; text-align: center;
-            background: #f8fafc; border-radius: var(--radius-sm);
-            border: 1px solid var(--border-light);
-        }
-
-        .rf-cell .rf-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); margin-bottom: 3px; }
-        .rf-cell .rf-val { font-size: 18px; font-weight: 800; }
-        .rf-cell .rf-val.green { color: var(--accent-green); }
-        .rf-cell .rf-val.blue { color: var(--accent-blue); }
-
-        /* Threshold */
-        .threshold-row {
+        .q-item {
             display: flex; align-items: center; gap: 10px;
-            margin-top: 8px; padding: 8px 10px;
-            background: #f8fafc; border-radius: var(--radius-sm);
-            border: 1px solid var(--border-light); font-size: 11px;
+            padding: 10px 12px;
+            border-radius: var(--r-md);
+            cursor: pointer; border: 1px solid transparent;
+            transition: all 0.15s var(--ease); margin-bottom: 1px;
         }
 
-        .threshold-row .th-label { color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+        .q-item:hover { background: var(--bg-3); }
 
-        .threshold-row .th-track { flex: 1; height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
-        .threshold-row .th-fill { height: 100%; border-radius: 3px; }
-        .th-fill.safe { background: var(--accent-green); }
-        .th-fill.warn { background: var(--accent-amber); }
-        .th-fill.danger { background: var(--accent-red); }
-        .threshold-row .th-val { font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
-
-        /* Reasoning */
-        .reason-box {
-            background: #f0f9ff; border: 1px solid #bae6fd;
-            border-radius: var(--radius-sm); padding: 12px 14px;
-            font-size: 13px; line-height: 1.7; color: #0c4a6e;
-            border-left: 3px solid var(--accent-purple);
+        .q-item.on {
+            background: var(--blue-dim);
+            border-color: var(--border-active);
         }
 
-        /* Guardrails */
-        .guardrail-row {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        .q-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            flex-shrink: 0;
         }
 
-        .gr-cell {
-            text-align: center; padding: 10px;
-            background: #f8fafc; border-radius: var(--radius-sm);
-            border: 1px solid var(--border-light);
+        .q-dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(52,211,153,0.4); }
+        .q-dot.esc { background: var(--red); box-shadow: 0 0 6px rgba(248,113,113,0.4); animation: blink 2.5s infinite; }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+        .q-info { flex: 1; min-width: 0; }
+
+        .q-id {
+            font-family: var(--mono);
+            font-size: 10px; font-weight: 600; color: var(--text-3);
         }
 
-        .gr-cell .gr-val { font-size: 16px; font-weight: 800; }
-        .gr-cell .gr-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); margin-top: 2px; }
-
-        .gr-cell .gr-status {
-            font-size: 9px; font-weight: 600; margin-top: 4px;
-            padding: 1px 6px; border-radius: 3px; display: inline-block;
+        .q-title {
+            font-size: 12px; font-weight: 600; margin-top: 1px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            color: var(--text-1);
         }
 
-        .gr-status.ok { background: #d1fae5; color: #065f46; }
-        .gr-status.warn { background: #fef3c7; color: #92400e; }
-        .gr-status.danger { background: #fee2e2; color: #991b1b; }
-
-        /* Customer / Policy */
-        .quote-box {
-            font-size: 12px; line-height: 1.6; color: var(--text-secondary);
-            padding: 10px 14px; background: #f8fafc;
-            border-radius: var(--radius-sm); border-left: 3px solid var(--border-light);
-            max-height: 120px; overflow-y: auto;
+        .q-badge {
+            font-size: 9px; font-weight: 700; padding: 2px 7px;
+            border-radius: 20px; white-space: nowrap; letter-spacing: 0.3px;
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
+        .q-badge.voucher { background: var(--blue-dim); color: var(--blue); }
+        .q-badge.refund { background: var(--green-dim); color: var(--green); }
+        .q-badge.escalated { background: var(--red-dim); color: var(--red); }
+
+        /* Memory */
+        .memory {
+            border-top: 1px solid var(--border-subtle);
+            padding: 14px 16px 16px;
+        }
+
+        .memory h4 {
+            font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: var(--purple); margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .memory h4::before {
+            content: ''; display: inline-block;
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--purple);
+        }
+
+        .mem-line {
+            font-size: 11px; color: var(--text-2);
+            padding: 2px 0; display: flex; gap: 6px; line-height: 1.4;
+        }
+
+        .mem-line span { flex-shrink: 0; font-size: 11px; }
+
+        .mem-warn {
+            margin-top: 8px; padding: 7px 10px;
+            background: var(--amber-dim);
+            border: 1px solid rgba(251,191,36,0.15);
+            border-radius: var(--r-sm);
+            font-size: 10px; color: var(--amber); line-height: 1.5;
+        }
+
+        /* ═══════════════════════════════════════
+           MAIN PANEL
+           ═══════════════════════════════════════ */
+        .main {
+            flex: 1; height: 100vh; overflow-y: auto;
+            background: var(--bg-0);
+        }
+
+        .main-inner { padding: 28px 36px 60px; max-width: 960px; }
+
+        /* Empty state */
+        .empty {
+            height: 70vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        .empty-ring {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 2px solid var(--border-default);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; margin-bottom: 20px;
+            background: var(--bg-2);
+        }
+
+        .empty h2 { font-size: 16px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; }
+        .empty p { font-size: 13px; color: var(--text-3); max-width: 340px; line-height: 1.6; }
+
+        /* ── Case Header ── */
+        .case-head {
+            display: flex; align-items: flex-start;
+            justify-content: space-between; gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .case-head h2 {
+            font-size: 20px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.25;
+        }
+
+        .ch-meta {
+            margin-top: 6px;
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+
+        .ch-chip {
+            font-size: 10px; font-weight: 600; padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--bg-3); color: var(--text-2);
+            font-family: var(--mono);
+        }
+
+        .decision-pill {
+            padding: 7px 16px; border-radius: var(--r-md);
+            font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            white-space: nowrap; flex-shrink: 0;
+        }
+
+        .decision-pill.ok {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(52,211,153,0.2);
+        }
+
+        .decision-pill.esc {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(248,113,113,0.2);
+        }
+
+        /* ── Agent Telemetry ── */
+        .tele {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 12px; margin-bottom: 24px;
+        }
+
+        .tele-cell {
+            background: var(--bg-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--r-md);
+            padding: 14px; text-align: center;
+        }
+
+        .tele-cell .tc-val {
+            font-family: var(--mono);
+            font-size: 22px; font-weight: 800;
+            color: var(--text-0);
+        }
+
+        .tele-cell .tc-lbl {
+            font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-3); margin-top: 4px;
+        }
+
+        /* ── ReAct Pipeline ── */
+        .react {
+            display: flex; align-items: stretch;
+            gap: 2px; margin-bottom: 28px;
+        }
+
+        .react-node {
+            flex: 1;
+            background: var(--bg-2);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--r-md);
+            padding: 12px 8px; text-align: center;
+            position: relative;
+            transition: all 0.25s var(--ease);
+        }
+
+        .react-node::after {
+            content: '';
+            position: absolute; right: -9px; top: 50%;
+            transform: translateY(-50%);
+            width: 14px; height: 2px;
+            background: var(--border-default);
+        }
+
+        .react-node:last-child::after { display: none; }
+
+        .rn-icon { font-size: 18px; margin-bottom: 4px; }
+
+        .rn-label {
+            font-size: 9px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-3);
+            transition: color 0.25s var(--ease);
+        }
+
+        .rn-sub {
+            font-size: 9px; color: var(--text-3);
+            margin-top: 2px; font-weight: 500;
+        }
+
+        /* Phase colors when active */
+        .react-node.done { border-color: var(--border-strong); }
+        .react-node.done.plan { border-color: rgba(251,191,36,0.25); background: var(--amber-dim); }
+        .react-node.done.plan .rn-label { color: var(--amber); }
+        .react-node.done.gather { border-color: rgba(99,140,255,0.25); background: var(--blue-dim); }
+        .react-node.done.gather .rn-label { color: var(--blue); }
+        .react-node.done.compute { border-color: rgba(61,216,224,0.25); background: var(--cyan-dim); }
+        .react-node.done.compute .rn-label { color: var(--cyan); }
+        .react-node.done.decide { border-color: rgba(167,139,250,0.25); background: var(--purple-dim); }
+        .react-node.done.decide .rn-label { color: var(--purple); }
+        .react-node.done.act-ok { border-color: rgba(52,211,153,0.25); background: var(--green-dim); }
+        .react-node.done.act-ok .rn-label { color: var(--green); }
+        .react-node.done.act-esc { border-color: rgba(248,113,113,0.25); background: var(--red-dim); }
+        .react-node.done.act-esc .rn-label { color: var(--red); }
+
+        /* ── Section Card ── */
+        .card {
+            background: var(--bg-1);
+            border: 1px solid var(--border-default);
+            border-radius: var(--r-lg);
+            margin-bottom: 16px;
+            overflow: hidden;
+            animation: slideUp 0.35s var(--ease) both;
+        }
+
+        .card:nth-child(3) { animation-delay: 0.04s; }
+        .card:nth-child(4) { animation-delay: 0.08s; }
+        .card:nth-child(5) { animation-delay: 0.12s; }
+        .card:nth-child(6) { animation-delay: 0.16s; }
+        .card:nth-child(7) { animation-delay: 0.20s; }
+        .card:nth-child(8) { animation-delay: 0.24s; }
+        .card:nth-child(9) { animation-delay: 0.28s; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .ticket-row { animation: fadeIn 0.3s ease forwards; }
-        .d-section { animation: fadeIn 0.25s ease forwards; }
+        .card-head {
+            padding: 14px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+        }
 
-        ::-webkit-scrollbar { width: 5px; }
+        .card-head h3 {
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-2);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .phase-tag {
+            font-size: 8px; font-weight: 800; padding: 2px 7px;
+            border-radius: 3px; letter-spacing: 0.5px;
+        }
+
+        .phase-tag.amber { background: var(--amber-dim); color: var(--amber); }
+        .phase-tag.blue { background: var(--blue-dim); color: var(--blue); }
+        .phase-tag.cyan { background: var(--cyan-dim); color: var(--cyan); }
+        .phase-tag.purple { background: var(--purple-dim); color: var(--purple); }
+        .phase-tag.green { background: var(--green-dim); color: var(--green); }
+        .phase-tag.red { background: var(--red-dim); color: var(--red); }
+
+        .card-head .ch-right {
+            font-size: 10px; color: var(--text-3); font-weight: 500;
+        }
+
+        .card-body { padding: 16px 20px; }
+
+        /* Plan content */
+        .plan-text {
+            font-size: 12px; line-height: 1.8;
+            color: var(--text-1); white-space: pre-wrap;
+            max-height: 200px; overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* Tool timeline */
+        .tool-list { display: flex; flex-direction: column; }
+
+        .tool-row {
+            display: grid;
+            grid-template-columns: 20px 1fr 1fr 50px;
+            align-items: center; gap: 14px;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 12px;
+        }
+
+        .tool-row:last-child { border-bottom: none; }
+
+        .tool-dot {
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; font-weight: 800;
+        }
+
+        .tool-dot.ok { background: var(--green-dim); color: var(--green); }
+        .tool-dot.fail { background: var(--red-dim); color: var(--red); }
+
+        .tool-name {
+            font-family: var(--mono); font-weight: 600;
+            font-size: 12px; color: var(--text-0);
+        }
+
+        .tool-result {
+            font-size: 11px; color: var(--text-2);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .tool-iter {
+            font-family: var(--mono); font-size: 10px;
+            color: var(--text-3); text-align: right;
+        }
+
+        /* Refund grid */
+        .refund-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .rf {
+            background: var(--bg-2); border-radius: var(--r-md);
+            padding: 14px; text-align: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .rf .rf-lbl {
+            font-size: 9px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-3); margin-bottom: 5px;
+        }
+
+        .rf .rf-val {
+            font-family: var(--mono);
+            font-size: 20px; font-weight: 800;
+        }
+
+        .rf-val.v-green { color: var(--green); }
+        .rf-val.v-blue { color: var(--blue); }
+        .rf-val.v-dim { color: var(--text-2); }
+
+        /* Threshold gauge */
+        .gauge {
+            margin-top: 12px; padding: 10px 14px;
+            background: var(--bg-2); border-radius: var(--r-md);
+            border: 1px solid var(--border-subtle);
+            display: flex; align-items: center; gap: 12px;
+        }
+
+        .gauge-lbl { font-size: 10px; color: var(--text-3); font-weight: 600; white-space: nowrap; }
+
+        .gauge-track {
+            flex: 1; height: 5px;
+            background: var(--bg-4); border-radius: 3px; overflow: hidden;
+        }
+
+        .gauge-fill { height: 100%; border-radius: 3px; transition: width 0.6s var(--ease); }
+        .gauge-fill.safe { background: var(--green); }
+        .gauge-fill.warn { background: var(--amber); }
+        .gauge-fill.danger { background: var(--red); }
+
+        .gauge-val {
+            font-family: var(--mono); font-size: 11px;
+            font-weight: 600; color: var(--text-2); white-space: nowrap;
+        }
+
+        /* Reasoning box */
+        .reason-text {
+            font-size: 13px; line-height: 1.8;
+            color: var(--text-1); padding: 2px 0 2px 16px;
+            border-left: 2px solid var(--purple);
+        }
+
+        /* Guardrails */
+        .gr-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .gr {
+            background: var(--bg-2); border-radius: var(--r-md);
+            padding: 14px; text-align: center;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .gr .gr-val {
+            font-family: var(--mono);
+            font-size: 16px; font-weight: 800;
+            color: var(--text-0);
+        }
+
+        .gr .gr-lbl {
+            font-size: 9px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            color: var(--text-3); margin-top: 3px;
+        }
+
+        .gr .gr-tag {
+            margin-top: 6px; display: inline-block;
+            font-size: 8px; font-weight: 800;
+            padding: 2px 7px; border-radius: 3px;
+            letter-spacing: 0.5px;
+        }
+
+        .gr-tag.ok { background: var(--green-dim); color: var(--green); }
+        .gr-tag.warn { background: var(--amber-dim); color: var(--amber); }
+        .gr-tag.danger { background: var(--red-dim); color: var(--red); }
+
+        /* Quote box */
+        .quote {
+            font-size: 12px; line-height: 1.7;
+            color: var(--text-2); padding: 12px 16px;
+            background: var(--bg-2); border-radius: var(--r-md);
+            border-left: 2px solid var(--text-3);
+            max-height: 140px; overflow-y: auto;
+        }
+
+        .quote.italic { font-style: italic; border-left-color: var(--amber); }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="logo-icon">CC</div>
-            <div class="brand-text">
-                <h2>CaseClose</h2>
-                <span>Autonomous AI Agent</span>
-            </div>
+<!-- ════════════ LEFT RAIL ════════════ -->
+<aside class="rail">
+    <div class="brand">
+        <div class="brand-mark">CC</div>
+        <div>
+            <h1>CaseClose</h1>
+            <p>Autonomous Agent</p>
         </div>
-        <nav class="sidebar-nav">
-            <a class="nav-item active" onclick="setFilter('all', this)">
-                <span class="nav-icon">📊</span> Dashboard
-            </a>
-            <a class="nav-item" onclick="setFilter('all', this)">
-                <span class="nav-icon">📥</span> All Tickets
-                <span class="badge" id="badgeTotal">0</span>
-            </a>
-            <a class="nav-item" onclick="setFilter('escalated', this)">
-                <span class="nav-icon">🚨</span> Escalations
-                <span class="badge" id="badgeEsc">0</span>
-            </a>
-            <a class="nav-item" onclick="setFilter('resolved', this)">
-                <span class="nav-icon">✅</span> Resolved
-            </a>
-        </nav>
+    </div>
 
-        <div class="sidebar-memory" id="sidebarMemory">
-            <h4>🧠 Agent Memory</h4>
-            <div id="memContent">
-                <div class="mem-item">📦 No cases loaded</div>
-            </div>
+    <div class="metrics">
+        <div class="m-cell c-green"><div class="m-num" id="mOk">—</div><div class="m-lbl">Resolved</div></div>
+        <div class="m-cell c-red"><div class="m-num" id="mEsc">—</div><div class="m-lbl">Escalated</div></div>
+        <div class="m-cell c-blue"><div class="m-num" id="mTok">—</div><div class="m-lbl">Tokens</div></div>
+        <div class="m-cell c-amber"><div class="m-num" id="mSav">—</div><div class="m-lbl">Saved</div></div>
+    </div>
+
+    <div class="queue-head">
+        <span>Case Queue</span>
+        <div class="pill-group">
+            <button class="pill on" onclick="filterQ('all',this)">All</button>
+            <button class="pill" onclick="filterQ('resolved',this)">OK</button>
+            <button class="pill" onclick="filterQ('escalated',this)">Esc</button>
         </div>
+    </div>
 
-        <div class="sidebar-footer">v1.1 — ReAct + Memory + Guardrails</div>
-    </aside>
+    <div class="queue" id="queue"></div>
 
-    <!-- MAIN -->
-    <main class="main-content">
-        <!-- Stats -->
-        <div class="stats-row">
-            <div class="stat-card green">
-                <div class="stat-icon">💰</div>
-                <div><div class="stat-value" id="sSaved">—</div><div class="stat-label">Business Cost Saved</div></div>
-            </div>
-            <div class="stat-card blue">
-                <div class="stat-icon">✅</div>
-                <div><div class="stat-value" id="sResolved">—</div><div class="stat-label">Auto-Resolved</div></div>
-            </div>
-            <div class="stat-card coral">
-                <div class="stat-icon">🚨</div>
-                <div><div class="stat-value" id="sEscalated">—</div><div class="stat-label">Escalations</div></div>
-            </div>
-            <div class="stat-card purple">
-                <div class="stat-icon">⚡</div>
-                <div><div class="stat-value" id="sTokens">—</div><div class="stat-label">Total Tokens</div></div>
-            </div>
+    <div class="memory">
+        <h4>Agent Working Memory</h4>
+        <div id="mem"></div>
+    </div>
+</aside>
+
+<!-- ════════════ MAIN PANEL ════════════ -->
+<main class="main" id="main">
+    <div class="main-inner">
+        <div class="empty">
+            <div class="empty-ring">&#129302;</div>
+            <h2>Select a case to inspect</h2>
+            <p>Click a ticket in the queue to view the full agent reasoning trace, tool orchestration, and autonomous decision analysis.</p>
         </div>
+    </div>
+</main>
 
-        <!-- Two-Column -->
-        <div class="content-grid">
-            <!-- Ticket List -->
-            <div class="ticket-section">
-                <div class="section-header">
-                    <h2>Processed Tickets</h2>
-                    <div class="filter-tabs">
-                        <button class="filter-tab active" onclick="setTab('all', this)">All</button>
-                        <button class="filter-tab" onclick="setTab('resolved', this)">Resolved</button>
-                        <button class="filter-tab" onclick="setTab('escalated', this)">Escalated</button>
-                    </div>
-                </div>
-                <div class="ticket-list" id="ticketList">
-                    <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:13px;">Loading...</div>
-                </div>
-            </div>
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let CASES=[], TICKETS=[], active=null, filter='all';
 
-            <!-- Agent Trace Panel -->
-            <div class="right-panel">
-                <div class="detail-panel" id="detailPanel">
-                    <div class="dp-empty">
-                        <div class="dp-icon">🤖</div>
-                        <p>Select a ticket to inspect the agent's reasoning, tool calls, and decision trace.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+async function boot(){
+    try{
+        const [cr,tr]=await Promise.all([fetch('/api/cases'),fetch('/api/tickets')]);
+        CASES=await cr.json(); TICKETS=await tr.json();
+        const tm={}; TICKETS.forEach(t=>tm[t.id]=t);
+        CASES.forEach(c=>{const t=tm[c.ticket_id];if(t){c._sub=t.subject;c._body=t.body;c._ch=t.channel}});
+        stats(); renderQ(); memory();
+        if(CASES.length) pick(CASES[0].ticket_id);
+    }catch(e){
+        document.getElementById('queue').innerHTML=
+            `<div style="padding:24px;color:var(--red);font-size:12px">API offline. Run <b>python server.py</b><br>${e.message}</div>`;
+    }
+}
 
-    <script>
-    let CASES = [], TICKETS = [], activeCase = null, currentFilter = 'all';
-
-    // ═══ Load Data ═══
-    async function loadData() {
-        try {
-            const [cr, tr] = await Promise.all([fetch('/api/cases'), fetch('/api/tickets')]);
-            CASES = await cr.json();
-            TICKETS = await tr.json();
-
-            const tm = {};
-            TICKETS.forEach(t => tm[t.id] = t);
-            CASES.forEach(c => {
-                const t = tm[c.ticket_id];
-                if (t) {
-                    c._subject = t.subject;
-                    c._body = t.body;
-                    c._channel = t.channel;
-                }
-            });
-
-            updateStats();
-            renderTickets();
-            updateMemory();
-            if (CASES.length > 0) selectCase(CASES[0].ticket_id);
-        } catch (e) {
-            document.getElementById('ticketList').innerHTML =
-                `<div style="padding:30px;text-align:center;color:var(--accent-red);font-size:13px;">
-                    Cannot reach API. Run <strong>python server.py</strong> first.<br>Error: ${esc(e.message)}
-                </div>`;
+// ═══════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════
+function stats(){
+    const ok=CASES.filter(c=>c.decision&&c.decision.startsWith('RESOLVED')).length;
+    const esc=CASES.filter(c=>c.decision==='ESCALATED').length;
+    const tok=CASES.reduce((s,c)=>s+(c.total_tokens_used||0),0);
+    let sav=0;
+    CASES.forEach(c=>{
+        if(c.decision==='RESOLVED_VOUCHER'&&c.refund_calculation){
+            sav+=(c.refund_calculation.cost_to_business_cash||0)-(c.refund_calculation.cost_to_business_voucher||0);
         }
-    }
+    });
+    document.getElementById('mOk').textContent=String(ok).padStart(2,'0');
+    document.getElementById('mEsc').textContent=String(esc).padStart(2,'0');
+    document.getElementById('mTok').textContent=tok>1000?Math.round(tok/1000)+'K':tok||'—';
+    document.getElementById('mSav').textContent=sav>0?'$'+Math.round(sav):'—';
+}
 
-    // ═══ Stats ═══
-    function updateStats() {
-        const resolved = CASES.filter(c => c.decision && c.decision.startsWith('RESOLVED')).length;
-        const escalated = CASES.filter(c => c.decision === 'ESCALATED').length;
-        const tokens = CASES.reduce((s, c) => s + (c.total_tokens_used || 0), 0);
-        let saved = 0;
-        CASES.forEach(c => {
-            if (c.decision === 'RESOLVED_VOUCHER' && c.refund_calculation) {
-                saved += (c.refund_calculation.cost_to_business_cash || 0) - (c.refund_calculation.cost_to_business_voucher || 0);
-            }
-        });
+// ═══════════════════════════════════════
+// MEMORY
+// ═══════════════════════════════════════
+function memory(){
+    const el=document.getElementById('mem');
+    if(!CASES.length){el.innerHTML='<div class="mem-line"><span>—</span> No data</div>';return;}
+    const air={};let cash=0,esc=0;
+    CASES.forEach(c=>{
+        if(c.refund_calculation)cash+=c.refund_calculation.cash_refund_amount||0;
+        if(c.decision==='ESCALATED')esc++;
+        const s=JSON.stringify(c.thought_trace||c.tools_called||[]);
+        ['SkyWest Airlines','Pacific Air','Atlantic Airways'].forEach(a=>{if(s.includes(a))air[a]=(air[a]||0)+1});
+    });
+    const rate=Math.round(CASES.filter(c=>c.decision&&c.decision.startsWith('RESOLVED')).length/CASES.length*100);
+    let h='';
+    h+=`<div class="mem-line"><span>&#128230;</span> ${CASES.length} cases in context</div>`;
+    h+=`<div class="mem-line"><span>&#128176;</span> $${Math.round(cash)} total refunds processed</div>`;
+    h+=`<div class="mem-line"><span>&#129302;</span> ${rate}% autonomous resolution</div>`;
+    Object.entries(air).forEach(([a,n])=>{if(n>=2)h+=`<div class="mem-warn">Pattern: ${n} issues with ${a}</div>`});
+    if(esc>=2)h+=`<div class="mem-warn">${esc} escalations — review policies</div>`;
+    el.innerHTML=h;
+}
 
-        document.getElementById('sSaved').textContent = '$' + Math.round(saved);
-        document.getElementById('sResolved').textContent = String(resolved).padStart(2, '0');
-        document.getElementById('sEscalated').textContent = String(escalated).padStart(2, '0');
-        document.getElementById('sTokens').textContent = tokens > 0 ? tokens.toLocaleString() : '—';
-        document.getElementById('badgeTotal').textContent = CASES.length;
-        document.getElementById('badgeEsc').textContent = escalated;
-    }
-
-    // ═══ Memory ═══
-    function updateMemory() {
-        const el = document.getElementById('memContent');
-        if (!CASES.length) return;
-
-        const airlines = {};
-        let totalCash = 0, escalations = 0;
-        CASES.forEach(c => {
-            if (c.refund_calculation) totalCash += c.refund_calculation.cash_refund_amount || 0;
-            if (c.decision === 'ESCALATED') escalations++;
-            const s = JSON.stringify(c.thought_trace || c.tools_called || []);
-            ['SkyWest Airlines', 'Pacific Air', 'Atlantic Airways'].forEach(a => {
-                if (s.includes(a)) airlines[a] = (airlines[a] || 0) + 1;
-            });
-        });
-
-        const autoRate = Math.round(CASES.filter(c => c.decision && c.decision.startsWith('RESOLVED')).length / CASES.length * 100);
-
-        let h = '';
-        h += `<div class="mem-item">📦 ${CASES.length} cases in working memory</div>`;
-        h += `<div class="mem-item">💰 $${Math.round(totalCash)} cumulative refunds</div>`;
-        h += `<div class="mem-item">🤖 ${autoRate}% autonomous resolution rate</div>`;
-
-        Object.entries(airlines).forEach(([a, n]) => {
-            if (n >= 2) h += `<div class="mem-alert">⚠ ${n} issues with ${a} — possible systemic problem</div>`;
-        });
-        if (escalations >= 2) h += `<div class="mem-alert">⚠ ${escalations} escalations this session</div>`;
-
-        el.innerHTML = h;
-    }
-
-    // ═══ Ticket List ═══
-    function renderTickets() {
-        const el = document.getElementById('ticketList');
-        let list = CASES;
-
-        if (currentFilter === 'resolved') list = list.filter(c => c.decision && c.decision.startsWith('RESOLVED'));
-        else if (currentFilter === 'escalated') list = list.filter(c => c.decision === 'ESCALATED');
-
-        if (!list.length) { el.innerHTML = '<p style="text-align:center;padding:40px;color:var(--text-muted);">No matching tickets.</p>'; return; }
-
-        const labels = { airline_cancellation:'Airline Cancel', customer_cancellation:'Customer Cancel', schedule_change:'Schedule Change', missed_connection:'Missed Connection', delay:'Flight Delay' };
-
-        el.innerHTML = list.map(c => {
-            const d = c.decision || 'UNKNOWN';
-            const isEsc = d === 'ESCALATED';
-            const isRef = d === 'RESOLVED_REFUND';
-            const rc = c.refund_calculation || {};
-            const amt = isRef ? rc.cash_refund_amount : rc.voucher_equivalent_amount;
-            const amtClass = isEsc ? 'red' : isRef ? 'green' : 'blue';
-            const badgeClass = isEsc ? 'escalated' : isRef ? 'resolved' : 'voucher';
-            const badgeText = isEsc ? '🚨 Escalated' : isRef ? '✅ Refund' : '💳 Voucher';
-            const isActive = activeCase === c.ticket_id;
-            const iters = c.iterations_used || 0;
-
-            return `
-                <div class="ticket-row ${isActive ? 'active' : ''}" onclick="selectCase('${c.ticket_id}')">
-                    <span class="t-num">${(c.ticket_id || '').replace('TKT-','#')}</span>
-                    <div class="t-info">
-                        <div class="t-subject">${esc(c._subject || c.ticket_id)}</div>
-                        <div class="t-meta">${labels[c.issue_type] || c.issue_type || '—'}</div>
-                    </div>
-                    <span class="t-amount ${amtClass}">${amt != null ? '$'+amt : '—'}</span>
-                    <span class="status-badge ${badgeClass}">${badgeText}</span>
-                    <span class="t-iters">${iters > 0 ? iters+'it' : '—'}</span>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function setTab(f, btn) {
-        currentFilter = f;
-        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderTickets();
-    }
-
-    function setFilter(f, el) {
-        currentFilter = f === 'escalated' ? 'escalated' : f === 'resolved' ? 'resolved' : 'all';
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-        const tabs = document.querySelectorAll('.filter-tab');
-        tabs.forEach(t => t.classList.remove('active'));
-        if (currentFilter === 'all') tabs[0]?.classList.add('active');
-        else if (currentFilter === 'resolved') tabs[1]?.classList.add('active');
-        else tabs[2]?.classList.add('active');
-        renderTickets();
-    }
-
-    // ═══ Select Case → Render Trace ═══
-    function selectCase(id) {
-        activeCase = id;
-        renderTickets();
-        const c = CASES.find(x => x.ticket_id === id);
-        if (c) renderDetail(c);
-    }
-
-    function renderDetail(c) {
-        const p = document.getElementById('detailPanel');
-        const rc = c.refund_calculation || {};
-        const isEsc = c.decision === 'ESCALATED';
-        const isRef = c.decision === 'RESOLVED_REFUND';
-        const tools = c.tools_called || [];
-        const trace = c.thought_trace || [];
-
-        const hasPlan = !!c.execution_plan;
-        const hasGather = tools.some(t => ['get_booking','get_policy','estimate_urgency','check_itinerary_conflict','search_alternate_flights'].includes(t.tool));
-        const hasCompute = tools.some(t => t.tool === 'calculate_refund');
-        const hasReason = !!c.reasoning;
-        const hasAct = tools.some(t => t.tool === 'finalize_case');
-
-        let h = '';
-
-        // Header
-        const decLabel = isEsc ? '🚨 ESCALATED' : isRef ? '✅ REFUND' : '💳 VOUCHER';
-        h += `<div class="dp-header"><h3>${esc(c.ticket_id)} — ${esc(c._subject || c.issue_type || '')}</h3><div class="dp-sub">${esc(c.issue_type || '')} · ${esc(c._channel || '')} · ${decLabel}</div></div>`;
-
-        // Agent Stats
-        h += `<div class="agent-stats">
-            <div class="a-stat"><div class="as-val">${c.iterations_used || 0}</div><div class="as-label">Iterations</div></div>
-            <div class="a-stat"><div class="as-val">${c.llm_calls || 0}</div><div class="as-label">LLM Calls</div></div>
-            <div class="a-stat"><div class="as-val">${(c.total_tokens_used || 0).toLocaleString()}</div><div class="as-label">Tokens</div></div>
-            <div class="a-stat"><div class="as-val">${c.elapsed_seconds || 0}s</div><div class="as-label">Time</div></div>
+// ═══════════════════════════════════════
+// QUEUE
+// ═══════════════════════════════════════
+function renderQ(){
+    const el=document.getElementById('queue');
+    let list=CASES;
+    if(filter==='resolved')list=list.filter(c=>c.decision&&c.decision.startsWith('RESOLVED'));
+    else if(filter==='escalated')list=list.filter(c=>c.decision==='ESCALATED');
+    if(!list.length){el.innerHTML='<div style="padding:30px;text-align:center;color:var(--text-3);font-size:12px">No cases</div>';return;}
+    el.innerHTML=list.map(c=>{
+        const d=c.decision||'';
+        const isEsc=d==='ESCALATED';
+        const isRef=d==='RESOLVED_REFUND';
+        const dot=isEsc?'esc':'ok';
+        const bc=isEsc?'escalated':isRef?'refund':'voucher';
+        const bt=isEsc?'ESC':isRef?'REFUND':'VOUCHER';
+        return `<div class="q-item ${active===c.ticket_id?'on':''}" onclick="pick('${c.ticket_id}')">
+            <div class="q-dot ${dot}"></div>
+            <div class="q-info"><div class="q-id">${c.ticket_id}</div><div class="q-title">${esc(c._sub||c.issue_type||c.ticket_id)}</div></div>
+            <span class="q-badge ${bc}">${bt}</span>
         </div>`;
+    }).join('');
+}
 
-        // ReAct Pipeline
-        h += `<div class="react-bar">
-            <div class="rp-step plan ${hasPlan?'done':''}"><div class="rp-icon">📋</div><div class="rp-name">Plan</div></div>
-            <div class="rp-step ${hasGather?'done':''}"><div class="rp-icon">🔍</div><div class="rp-name">Gather</div></div>
-            <div class="rp-step compute ${hasCompute?'done':''}"><div class="rp-icon">🧮</div><div class="rp-name">Compute</div></div>
-            <div class="rp-step decide ${hasReason?'done':''}"><div class="rp-icon">⚖️</div><div class="rp-name">Decide</div></div>
-            <div class="rp-step ${isEsc?'act-esc':'act'} ${hasAct?'done':''}"><div class="rp-icon">${isEsc?'🚨':'✅'}</div><div class="rp-name">Act</div></div>
-        </div>`;
+function filterQ(f,btn){
+    filter=f;
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('on'));
+    btn.classList.add('on');
+    renderQ();
+}
 
-        // Plan
-        if (c.execution_plan) {
-            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag amber">Plan</span> Execution Plan</div><div class="plan-box">${esc(c.execution_plan)}</div></div>`;
-        }
+// ═══════════════════════════════════════
+// PICK → RENDER TRACE
+// ═══════════════════════════════════════
+function pick(id){
+    active=id; renderQ();
+    const c=CASES.find(x=>x.ticket_id===id);
+    if(!c)return;
 
-        // Tool Log
-        if (tools.length > 0) {
-            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag blue">Gather</span> Tool Execution (${tools.length} calls)</div>`;
-            tools.forEach(t => {
-                const dot = t.success !== false ? 'ok' : 'err';
-                const ts = trace.find(s => s.tool === t.tool && s.iteration === t.iteration && s.type === 'tool_result');
-                const summary = ts ? ts.result_summary : (t.args_summary || '');
-                h += `<div class="tool-item">
-                    <div class="ti-dot ${dot}"></div>
-                    <span class="ti-name">${esc(t.tool)}</span>
-                    <span class="ti-result" title="${esc(summary)}">${esc(summary)}</span>
-                    <span class="ti-iter">iter ${t.iteration}</span>
-                </div>`;
-            });
-            h += `</div>`;
-        }
+    const m=document.getElementById('main');
+    const rc=c.refund_calculation||{};
+    const isEsc=c.decision==='ESCALATED';
+    const isRef=c.decision==='RESOLVED_REFUND';
+    const tools=c.tools_called||[];
+    const trace=c.thought_trace||[];
 
-        // Refund
-        if (rc.cash_refund_amount != null) {
-            const pct = rc.auto_approve_max > 0 ? Math.min(100, Math.round(rc.cash_refund_amount / rc.auto_approve_max * 100)) : 0;
-            const fill = pct > 100 ? 'danger' : pct > 80 ? 'warn' : 'safe';
-            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag cyan">Compute</span> Deterministic Refund</div>
-                <div class="refund-grid">
-                    <div class="rf-cell"><div class="rf-label">Cash Refund</div><div class="rf-val green">$${rc.cash_refund_amount}</div></div>
-                    <div class="rf-cell"><div class="rf-label">Voucher Value</div><div class="rf-val blue">$${rc.voucher_equivalent_amount}</div></div>
-                    <div class="rf-cell"><div class="rf-label">Biz Cost (Cash)</div><div class="rf-val">$${rc.cost_to_business_cash}</div></div>
-                    <div class="rf-cell"><div class="rf-label">Biz Cost (Voucher)</div><div class="rf-val">$${rc.cost_to_business_voucher}</div></div>
-                </div>
-                <div class="threshold-row">
-                    <div class="th-label">Auto-Approve</div>
-                    <div class="th-track"><div class="th-fill ${fill}" style="width:${Math.min(pct,100)}%"></div></div>
-                    <div class="th-val">$${rc.cash_refund_amount} / $${rc.auto_approve_max}</div>
-                </div>
+    const hasPlan=!!c.execution_plan;
+    const gatherTools=['get_booking','get_policy','estimate_urgency','check_itinerary_conflict','search_alternate_flights'];
+    const hasGather=tools.some(t=>gatherTools.includes(t.tool));
+    const hasCompute=tools.some(t=>t.tool==='calculate_refund');
+    const hasReason=!!c.reasoning;
+    const hasAct=tools.some(t=>t.tool==='finalize_case');
+
+    let h='<div class="main-inner">';
+
+    // ── Header ──
+    const dLabel=isEsc?'ESCALATED':isRef?'CASH REFUND':'VOUCHER';
+    const dAmt=isEsc?`$${rc.cash_refund_amount||0} exceeds limit`:isRef?`$${rc.cash_refund_amount||0}`:`$${rc.voucher_equivalent_amount||0}`;
+    h+=`<div class="case-head">
+        <div>
+            <h2>${esc(c._sub||c.issue_type||c.ticket_id)}</h2>
+            <div class="ch-meta">
+                <span class="ch-chip">${c.ticket_id}</span>
+                <span class="ch-chip">${c.issue_type||'—'}</span>
+                <span class="ch-chip">${c._ch||'—'}</span>
+                <span class="ch-chip">${c.iterations_used||0} iter</span>
+                <span class="ch-chip">${c.llm_calls||0} llm</span>
+                <span class="ch-chip">${(c.total_tokens_used||0).toLocaleString()} tok</span>
+                <span class="ch-chip">${c.elapsed_seconds||0}s</span>
+            </div>
+        </div>
+        <div class="decision-pill ${isEsc?'esc':'ok'}">${isEsc?'&#128680;':'&#9989;'} ${dLabel} &mdash; ${dAmt}</div>
+    </div>`;
+
+    // ── Telemetry ──
+    h+=`<div class="tele">
+        <div class="tele-cell"><div class="tc-val">${c.iterations_used||0}</div><div class="tc-lbl">Iterations</div></div>
+        <div class="tele-cell"><div class="tc-val">${c.llm_calls||0}</div><div class="tc-lbl">LLM Calls</div></div>
+        <div class="tele-cell"><div class="tc-val">${(c.total_tokens_used||0).toLocaleString()}</div><div class="tc-lbl">Tokens</div></div>
+        <div class="tele-cell"><div class="tc-val">${c.elapsed_seconds||0}s</div><div class="tc-lbl">Elapsed</div></div>
+    </div>`;
+
+    // ── ReAct Pipeline ──
+    const actCls=isEsc?'act-esc':'act-ok';
+    h+=`<div class="react">
+        <div class="react-node plan ${hasPlan?'done':''}"><div class="rn-icon">&#128203;</div><div class="rn-label">Plan</div><div class="rn-sub">${hasPlan?'strategy':'—'}</div></div>
+        <div class="react-node gather ${hasGather?'done':''}"><div class="rn-icon">&#128269;</div><div class="rn-label">Gather</div><div class="rn-sub">${tools.filter(t=>gatherTools.includes(t.tool)).length} tools</div></div>
+        <div class="react-node compute ${hasCompute?'done':''}"><div class="rn-icon">&#129518;</div><div class="rn-label">Compute</div><div class="rn-sub">${hasCompute?'deterministic':'—'}</div></div>
+        <div class="react-node decide ${hasReason?'done':''}"><div class="rn-icon">&#9878;&#65039;</div><div class="rn-label">Decide</div><div class="rn-sub">${hasReason?'tradeoff':'—'}</div></div>
+        <div class="react-node ${actCls} ${hasAct||c.decision?'done':''}"><div class="rn-icon">${isEsc?'&#128680;':'&#9989;'}</div><div class="rn-label">Act</div><div class="rn-sub">${c.decision?(c.decision.replace('RESOLVED_','')).toLowerCase():'—'}</div></div>
+    </div>`;
+
+    // ── 1. Plan ──
+    if(c.execution_plan){
+        h+=`<div class="card"><div class="card-head"><h3><span class="phase-tag amber">PLAN</span> Agent Execution Strategy</h3><div class="ch-right">Iteration 0 &middot; Pre-execution</div></div>
+        <div class="card-body"><div class="plan-text">${esc(c.execution_plan)}</div></div></div>`;
+    }
+
+    // ── 2. Tool Log ──
+    if(tools.length){
+        h+=`<div class="card"><div class="card-head"><h3><span class="phase-tag blue">GATHER</span> Tool Execution Log</h3><div class="ch-right">${tools.length} calls across ${c.iterations_used||'?'} iterations</div></div><div class="card-body"><div class="tool-list">`;
+        tools.forEach(t=>{
+            const ok=t.success!==false;
+            const ts=trace.find(s=>s.tool===t.tool&&s.iteration===t.iteration&&s.type==='tool_result');
+            const sum=ts?ts.result_summary:(t.args_summary||'');
+            h+=`<div class="tool-row">
+                <div class="tool-dot ${ok?'ok':'fail'}">${ok?'&#10003;':'&#10007;'}</div>
+                <div class="tool-name">${esc(t.tool)}</div>
+                <div class="tool-result" title="${esc(sum)}">${esc(sum)}</div>
+                <div class="tool-iter">i${t.iteration}</div>
             </div>`;
-        }
+        });
+        h+=`</div></div></div>`;
+    }
 
-        // Reasoning
-        if (c.reasoning) {
-            h += `<div class="d-section"><div class="ds-label"><span class="ds-tag purple">Decide</span> AI Reasoning</div><div class="reason-box">${esc(c.reasoning)}</div></div>`;
-        }
-
-        // Guardrails
-        const iterPct = c.iterations_used ? Math.round(c.iterations_used / 6 * 100) : 0;
-        const iterSt = iterPct >= 100 ? 'danger' : iterPct > 66 ? 'warn' : 'ok';
-        const thSt = rc.exceeds_auto_approve ? 'danger' : 'ok';
-        const corr = c.self_corrections || 0;
-        const corrSt = corr > 0 ? 'warn' : 'ok';
-
-        h += `<div class="d-section"><div class="ds-label"><span class="ds-tag red">Safety</span> Guardrails</div>
-            <div class="guardrail-row">
-                <div class="gr-cell"><div class="gr-val">${c.iterations_used||0}/6</div><div class="gr-label">Iter Cap</div><div class="gr-status ${iterSt}">${iterPct>=100?'HIT':'OK'}</div></div>
-                <div class="gr-cell"><div class="gr-val">$${rc.auto_approve_max||500}</div><div class="gr-label">Approve Limit</div><div class="gr-status ${thSt}">${rc.exceeds_auto_approve?'EXCEEDED':'OK'}</div></div>
-                <div class="gr-cell"><div class="gr-val">${corr}</div><div class="gr-label">Self-Correct</div><div class="gr-status ${corrSt}">${corr>0?corr+' FIX':'CLEAN'}</div></div>
+    // ── 3. Refund ──
+    if(rc.cash_refund_amount!=null){
+        const pct=rc.auto_approve_max>0?Math.min(100,Math.round(rc.cash_refund_amount/rc.auto_approve_max*100)):0;
+        const fill=rc.exceeds_auto_approve?'danger':pct>70?'warn':'safe';
+        h+=`<div class="card"><div class="card-head"><h3><span class="phase-tag cyan">COMPUTE</span> Deterministic Refund Calculation</h3><div class="ch-right">Pure Python &middot; No LLM</div></div>
+        <div class="card-body">
+            <div class="refund-grid">
+                <div class="rf"><div class="rf-lbl">Cash Refund</div><div class="rf-val v-green">$${rc.cash_refund_amount}</div></div>
+                <div class="rf"><div class="rf-lbl">Voucher Value</div><div class="rf-val v-blue">$${rc.voucher_equivalent_amount}</div></div>
+                <div class="rf"><div class="rf-lbl">Biz Cost (Cash)</div><div class="rf-val v-dim">$${rc.cost_to_business_cash}</div></div>
+                <div class="rf"><div class="rf-lbl">Biz Cost (Voucher)</div><div class="rf-val v-dim">$${rc.cost_to_business_voucher}</div></div>
             </div>
-        </div>`;
-
-        // Customer
-        if (c._body) {
-            h += `<div class="d-section"><div class="ds-label">Customer Input</div><div class="quote-box">${esc(c._body)}</div></div>`;
-        }
-
-        // Policy
-        if (c.policy_cited) {
-            h += `<div class="d-section"><div class="ds-label">Policy Cited</div><div class="quote-box" style="font-style:italic;">${esc(c.policy_cited)}</div></div>`;
-        }
-
-        p.innerHTML = h;
+            <div class="gauge">
+                <div class="gauge-lbl">Auto-Approve Threshold</div>
+                <div class="gauge-track"><div class="gauge-fill ${fill}" style="width:${Math.min(pct,100)}%"></div></div>
+                <div class="gauge-val">$${rc.cash_refund_amount} / $${rc.auto_approve_max}</div>
+            </div>
+        </div></div>`;
     }
 
-    // ═══ Utils ═══
-    function esc(s) {
-        if (!s) return '';
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    // ── 4. Reasoning ──
+    if(c.reasoning){
+        h+=`<div class="card"><div class="card-head"><h3><span class="phase-tag purple">DECIDE</span> AI Reasoning &mdash; Tradeoff Analysis</h3></div>
+        <div class="card-body"><div class="reason-text">${esc(c.reasoning)}</div></div></div>`;
     }
 
-    // ═══ Init ═══
-    loadData();
-    </script>
+    // ── 5. Guardrails ──
+    const iPct=c.iterations_used?Math.round(c.iterations_used/6*100):0;
+    const iSt=iPct>=100?'danger':iPct>66?'warn':'ok';
+    const tSt=rc.exceeds_auto_approve?'danger':'ok';
+    const co=c.self_corrections||0;
+    const cSt=co>0?'warn':'ok';
+
+    h+=`<div class="card"><div class="card-head"><h3><span class="phase-tag red">SAFETY</span> Guardrails &amp; Constraints</h3></div>
+    <div class="card-body"><div class="gr-grid">
+        <div class="gr"><div class="gr-val">${c.iterations_used||0} / 6</div><div class="gr-lbl">Iteration Cap</div><div class="gr-tag ${iSt}">${iPct>=100?'CAP HIT':'WITHIN LIMIT'}</div></div>
+        <div class="gr"><div class="gr-val">$${rc.auto_approve_max||500}</div><div class="gr-lbl">Approve Limit</div><div class="gr-tag ${tSt}">${rc.exceeds_auto_approve?'EXCEEDED':'WITHIN LIMIT'}</div></div>
+        <div class="gr"><div class="gr-val">${co}</div><div class="gr-lbl">Self-Corrections</div><div class="gr-tag ${cSt}">${co>0?co+' RECOVERY':'CLEAN RUN'}</div></div>
+    </div></div></div>`;
+
+    // ── 6. Customer ──
+    if(c._body){
+        h+=`<div class="card"><div class="card-head"><h3>Customer Input</h3></div>
+        <div class="card-body"><div class="quote">${esc(c._body)}</div></div></div>`;
+    }
+
+    // ── 7. Policy ──
+    if(c.policy_cited){
+        h+=`<div class="card"><div class="card-head"><h3>Policy Cited</h3></div>
+        <div class="card-body"><div class="quote italic">${esc(c.policy_cited)}</div></div></div>`;
+    }
+
+    h+='</div>';
+    m.innerHTML=h;
+    m.scrollTop=0;
+}
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+boot();
+</script>
 </body>
 </html>
